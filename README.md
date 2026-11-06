@@ -151,29 +151,75 @@ mode and carries 250+ usages with it. Light is the default.
 
 ---
 
+## Project structure
+
+Two independent apps, each with its own dependencies and its own `.env`.
+They deploy separately and talk over HTTP.
+
+```
+pathora-ai/
+├── frontend/          Next.js 16 app — the whole student + educator interface
+│   ├── src/app/       routes
+│   ├── src/components/
+│   ├── src/lib/       catalogue, questions, scoring, store, API client
+│   └── .env.example   NEXT_PUBLIC_API_BASE_URL
+│
+└── backend/           Express + Mongoose API
+    ├── src/routes/    admin · batches · submissions · mentor
+    ├── src/lib/       db · models · auth · validation · http
+    └── .env.example   MONGODB_URI · ADMIN_PASSCODE · AUTH_SECRET · LLM_API_KEY
+```
+
+**The frontend does not need the backend to run.** The whole journey — questions,
+scoring, results, PDF — works locally in the browser. The backend adds
+persistence, batch codes and the educator dashboard; when it is absent those
+routes answer `503` and the interface degrades to local-only.
+
+---
+
 ## Stack
 
 ```
-Next.js 16 (App Router · Turbopack · cacheComponents)
-React 19  ·  TypeScript strict  ·  Tailwind CSS v4 (CSS-first tokens)
-Framer Motion  ·  GSAP (analysis sequence only)  ·  Recharts
-Zustand + persist  ·  Zod  ·  jsPDF
+FRONTEND   Next.js 16 (App Router · Turbopack · cacheComponents)
+           React 19 · TypeScript strict · Tailwind v4 (CSS-first tokens)
+           Framer Motion · GSAP (analysis sequence only) · Recharts
+           Zustand + persist · Zod · jsPDF
+
+BACKEND    Express 4 · Mongoose 8 · Zod · TypeScript (ESM, NodeNext)
+           httpOnly cookie sessions · CORS with credentials
 ```
 
 ---
 
 ## Run it
 
+Two terminals.
+
 ```bash
+# ── backend ──────────────────────────────────────────
+cd backend
+cp .env.example .env
 npm install
-npm run dev          # http://localhost:3000
+npm run dev                 # http://localhost:4000
 ```
 
-Everything works with **no API key**. To enable the optional AI wording layer:
+```bash
+# ── frontend ─────────────────────────────────────────
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev                 # http://localhost:3000
+```
+
+**No keys are required.** With an empty `backend/.env` the API still boots and
+answers `/api/health`; database routes return `503` and the frontend runs
+local-only. Fill in `MONGODB_URI` for persistence, and `LLM_API_KEY` only if you
+want the optional AI wording layer.
+
+Frontend only, with no backend at all:
 
 ```bash
-cp .env.example .env.local
-# add any OpenAI-compatible endpoint + key
+cd frontend && npm install && npm run dev
 ```
 
 ---
