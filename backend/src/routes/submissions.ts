@@ -1,10 +1,9 @@
 import { Router } from "express";
-import { z } from "zod";
 
 import { SubmissionModel, BatchModel } from "../lib/models.js";
 import { ensureSeeded } from "../lib/seed.js";
 import { isAdminRequest, clientKey } from "../lib/auth.js";
-import { submissionCreateSchema } from "../lib/validation.js";
+import { submissionCreateSchema, submissionIdSchema } from "../lib/validation.js";
 import { dbError, unauthorized, notFound, badRequest } from "../lib/http.js";
 
 export const submissionsRouter = Router();
@@ -24,6 +23,18 @@ const submissionAttempts = new Map<string, number[]>();
 /** Only has to catch valid-but-unusable payloads; express.json() rejects the rest. */
 function isJsonObject(body: unknown): body is Record<string, unknown> {
   return typeof body === "object" && body !== null && !Array.isArray(body);
+}
+
+/**
+ * Drops Mongo internals before a submission goes over the wire. Everything
+ * else is kept, including `sample` — the dashboard, the PDF export and the
+ * store all read that field to mark demo rows.
+ */
+function sanitizeSubmission<T extends Record<string, unknown>>(
+  doc: T,
+): Omit<T, "_id" | "__v"> {
+  const { _id: _ignoredId, __v: _ignoredV, ...rest } = doc;
+  return rest;
 }
 
 /** First value of a query parameter, ignoring repeats and nested objects. */
@@ -46,7 +57,7 @@ submissionsRouter.get("/", async (req, res) => {
     if (batchCode) query.batchCode = batchCode;
     const submissions = await SubmissionModel.find(query).sort({ createdAt: -1 }).lean();
 
-    return res.json({ submissions: submissions ?? [] });
+    return res.json({ submissions: (submissions ?? []).map(sanitizeSubmission) });
   } catch {
     return dbError(res);
   }
@@ -124,7 +135,9 @@ submissionsRouter.post("/", async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true },
     ).lean();
 
-    return res.status(201).json({ submission: created ?? null });
+    return res.status(201).json({
+      submission: created ? sanitizeSubmission(created) : null,
+    });
   } catch {
     return dbError(res);
   }
@@ -142,7 +155,8 @@ submissionsRouter.delete("/", async (req, res) => {
       return badRequest(res, "A submission id query parameter is required.");
     }
 
-    const submissionIdSchema = z.string().regex(/^[a-z0-9]{8,16}$/);
+    // Shared with submissionCreateSchema on purpose: a delete rule that is
+    // stricter than the create rule makes rows that cannot be removed.
     if (!submissionIdSchema.safeParse(id).success) {
       return badRequest(res, "The provided submission id is invalid.");
     }

@@ -92,7 +92,9 @@ export async function clearAdminSession(base: string | null): Promise<void> {
   await adminFetch(base, "/api/admin/session", { method: "DELETE" });
 }
 
-export type BatchPayload = { id: string; name: string; code: string; institution: string; createdAt: string; capacity: number };
+// `sample` marks a demo row. The API returns it on every batch, and the admin
+// UI renders a badge from it, so it belongs on the payload type.
+export type BatchPayload = { id: string; name: string; code: string; institution: string; createdAt: string; capacity: number; sample?: boolean };
 export type BatchesResponse = { batches?: BatchPayload[]; error?: string };
 export type CreateBatchResponse = { batch?: BatchPayload; status?: string; error?: string };
 export type DeleteBatchResponse = { deleted?: boolean; error?: string };
@@ -132,6 +134,7 @@ export type SubmissionPayload = {
   undecided: boolean;
   eligibleCourses: string[];
   interestedCareers: string[];
+  sample?: boolean;
 };
 export type SubmissionsResponse = { submissions?: SubmissionPayload[]; error?: string };
 

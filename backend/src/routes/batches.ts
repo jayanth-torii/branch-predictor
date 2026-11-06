@@ -21,17 +21,29 @@ type BatchShape = {
   institution: string;
   createdAt: string;
   capacity: number;
+  sample: boolean;
 };
 
-/** Drops Mongo internals (_id, sample) before the batch goes over the wire. */
-function sanitizeBatch(doc: BatchShape & { _id?: unknown }): BatchShape {
+/**
+ * Drops Mongo internals (_id, __v) before a batch goes over the wire.
+ *
+ * `sample` is NOT an internal and is deliberately kept: the dashboard renders a
+ * "sample" badge from it, the PDF export labels sample rows, and the store
+ * filters on it. An earlier version stripped it here, so a batch silently lost
+ * its badge after a create or an edit until the page was reloaded.
+ *
+ * Every handler that returns a batch runs it through this, so the list, the
+ * single lookup, the create and the edit cannot disagree about the shape.
+ */
+function sanitizeBatch(doc: Partial<BatchShape> & { _id?: unknown }): BatchShape {
   return {
-    id: doc.id,
-    name: doc.name,
-    code: doc.code,
-    institution: doc.institution,
-    createdAt: doc.createdAt,
-    capacity: doc.capacity,
+    id: doc.id ?? "",
+    name: doc.name ?? "",
+    code: doc.code ?? "",
+    institution: doc.institution ?? "",
+    createdAt: doc.createdAt ?? "",
+    capacity: doc.capacity ?? 0,
+    sample: doc.sample ?? false,
   };
 }
 
@@ -47,7 +59,7 @@ function isJsonObject(body: unknown): body is Record<string, unknown> {
 batchesRouter.get("/", async (_req, res) => {
   try {
     const batches = await BatchModel.find({}).sort({ createdAt: 1 }).lean();
-    return res.json({ batches: batches ?? [] });
+    return res.json({ batches: (batches ?? []).map(sanitizeBatch) });
   } catch {
     return dbError(res);
   }
@@ -140,7 +152,7 @@ batchesRouter.get("/:code", async (req, res) => {
     const code = req.params.code.trim().toUpperCase();
     const batch = await BatchModel.findOne({ code }).lean();
     if (!batch) return notFound(res);
-    return res.json({ batch });
+    return res.json({ batch: sanitizeBatch(batch) });
   } catch {
     return dbError(res);
   }

@@ -1,9 +1,27 @@
 import { z, type ZodObject } from "zod";
 import { DIMENSIONS, STREAMS } from "./domain.js";
 
-const batchIdRe = /^[a-z0-9]{8,16}$/;
 const batchCodeRe = /^[A-Z0-9][A-Z0-9-]{2,23}$/;
-const submissionIdRe = /^[a-z0-9]{8,16}$/;
+
+/**
+ * Submission ids are generated client-side as `pt-<base36 time>-<base36 seq>`
+ * (see buildResult in the frontend's scoring.ts), so they contain hyphens.
+ *
+ * This previously paired /^[a-z0-9]{8,16}$/ with a `startsWith("res-")` check
+ * — two rules that no string can satisfy at once, because the character class
+ * forbids the hyphen the prefix requires. Every create was rejected. The
+ * pattern now matches what the app actually produces, and DELETE imports the
+ * same schema rather than restating it, so the two cannot drift apart again.
+ *
+ * It stays deliberately tight: lowercase alphanumerics and hyphens only, must
+ * start alphanumeric, 8-40 characters. The id is used as an upsert filter, so
+ * the charset excludes `$` and `.` — no operator or dotted-path injection.
+ */
+const submissionIdRe = /^[a-z0-9][a-z0-9-]{7,39}$/;
+
+export const submissionIdSchema = z
+  .string()
+  .regex(submissionIdRe, { message: "Submission id is invalid." });
 
 export const batchInputSchema = z.strictObject({
   name: z
@@ -35,12 +53,7 @@ export const batchLookupSchema = z.object({
 });
 
 export const submissionCreateSchema = z.strictObject({
-  id: z
-    .string()
-    .regex(submissionIdRe, { message: "Submission id is invalid." })
-    .refine((id) => id.startsWith("res-"), {
-      message: "Submission ids must start with res-.",
-    }),
+  id: submissionIdSchema,
   name: z.string().max(80, { message: "Student name is too long." }),
   stream: z.union([z.enum(STREAMS), z.literal("")]),
   puYear: z.union([z.enum(["1st PU", "2nd PU"]), z.literal("")]),
@@ -80,7 +93,7 @@ export const adminDataQuerySchema = z.object({
 });
 
 export const submissionIdParamSchema = z.object({
-  id: z.string().regex(submissionIdRe, { message: "Invalid submission id." }),
+  id: submissionIdSchema,
 });
 
 export const extractBatchCode = (params: Promise<{ code: string }>): Promise<string> =>
