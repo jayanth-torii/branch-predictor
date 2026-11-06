@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 230" width="1200" height="230" role="img" aria-label="The engineering position: a deterministic pipeline where the AI layer only rewords">
+  <defs>
+    <clipPath id="gClip"><rect width="1200" height="230" rx="16"/></clipPath>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#3A4568"/>
+    </marker>
+  </defs>
+
+  <g clip-path="url(#gClip)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+    <rect width="1200" height="230" fill="#0B1226"/>
+    <text x="40" y="38" font-size="12" letter-spacing="2.6" fill="#6B7794">THE ENGINEERING POSITION</text>
+
+    <!-- the deterministic spine -->
+    <g transform="translate(60 92)">
+      <line x1="150" y1="30" x2="206" y2="30" stroke="#3A4568" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="356" y1="30" x2="412" y2="30" stroke="#3A4568" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="562" y1="30" x2="618" y2="30" stroke="#3A4568" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="768" y1="30" x2="824" y2="30" stroke="#3A4568" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- a token travelling the whole pipeline -->
+      <circle r="5" fill="#FFC6AE">
+        <animateMotion dur="5.5s" repeatCount="indefinite"
+          path="M0,30 L150,30 L206,30 L356,30 L412,30 L562,30 L618,30 L768,30 L824,30 L960,30"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.92;1" dur="5.5s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- stage 1 -->
+      <g>
+        <rect width="150" height="60" rx="12" fill="#141F3E" stroke="#2A3558"/>
+        <text x="16" y="26" font-size="12.5" font-weight="700" fill="#EEF1F8">Answers</text>
+        <text x="16" y="44" font-size="11" fill="#8A97B4">25 weighted</text>
+      </g>
+
+      <!-- stage 2 -->
+      <g transform="translate(206 0)">
+        <rect width="150" height="60" rx="12" fill="#141F3E" stroke="#FF6B35" stroke-opacity="0.45"/>
+        <text x="16" y="26" font-size="12.5" font-weight="700" fill="#EEF1F8">Fixed rule</text>
+        <text x="16" y="44" font-size="11" fill="#8A97B4">same in, same out</text>
+      </g>
+
+      <!-- stage 3 -->
+      <g transform="translate(412 0)">
+        <rect width="150" height="60" rx="12" fill="#141F3E" stroke="#2A3558"/>
+        <text x="16" y="26" font-size="12.5" font-weight="700" fill="#EEF1F8">Gates</text>
+        <text x="16" y="44" font-size="11" fill="#8A97B4">stream &#183; marks</text>
+      </g>
+
+      <!-- stage 4 -->
+      <g transform="translate(618 0)">
+        <rect width="150" height="60" rx="12" fill="#141F3E" stroke="#2A3558"/>
+        <text x="16" y="26" font-size="12.5" font-weight="700" fill="#EEF1F8">Three labels</text>
+        <text x="16" y="44" font-size="11" fill="#8A97B4">no percentage</text>
+      </g>
+
+      <!-- stage 5: the AI layer, visibly downstream and optional -->
+      <g transform="translate(824 0)">
+        <rect width="178" height="60" rx="12" fill="#141F3E" stroke="#6750E6" stroke-opacity="0.5" stroke-dasharray="5 5"/>
+        <text x="16" y="26" font-size="12.5" font-weight="700" fill="#C3CDE6">AI wording</text>
+        <text x="16" y="44" font-size="11" fill="#8A97B4">optional &#183; rewords only</text>
+        <animate attributeName="opacity" values="0.55;1;0.55" dur="4s" repeatCount="indefinite"/>
+      </g>
+    </g>
+
+    <!-- the invariant, stated under the pipeline -->
+    <g transform="translate(60 196)">
+      <rect width="14" height="14" rx="4" fill="#FF6B35"/>
+      <text x="26" y="12" font-size="12.5" fill="#A3AEC7">
+        Scores, ranks, labels and eligibility are computed
+        <tspan fill="#FFFFFF" font-weight="700">before</tspan> any model call — and are never passed back for it to change.
+      </text>
+    </g>
+  </g>
+</svg>

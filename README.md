@@ -28,6 +28,8 @@ instead of handing down a verdict.
 
 ---
 
+<img src=".github/assets/why.svg" width="100%" alt="Most quizzes answer with a black box; this one shows the reasoning" />
+
 ## Why this exists
 
 Most PU students pick a degree on the advice of relatives, coaching centres and
@@ -81,6 +83,8 @@ hide it and never alter its rank.
 
 ---
 
+<img src=".github/assets/student.svg" width="100%" alt="Six dimensions, an archetype, and ranked courses" />
+
 ## What a student gets
 
 | | |
@@ -95,6 +99,8 @@ hide it and never alter its rank.
 
 ---
 
+<img src=".github/assets/educators.svg" width="100%" alt="One batch code on the board; the class joins and the batch maps itself" />
+
 ## For educators
 
 > Put **one code on the board.** The class joins — no accounts, no emails,
@@ -104,6 +110,8 @@ Aggregated dashboards show interest distribution, course demand and the students
 still undecided. **Individual answers are never exposed by default.**
 
 ---
+
+<img src=".github/assets/engineering.svg" width="100%" alt="A deterministic pipeline where the AI layer only rewords" />
 
 ## The engineering position
 
@@ -170,22 +178,6 @@ cp .env.example .env.local
 
 ---
 
-## What this is honestly not
-
-Worth stating plainly, because a tool aimed at sixteen-year-olds should not
-oversell itself:
-
-- **Not a psychometric instrument.** Twenty-five questions map interests. They do
-  not measure aptitude, and the copy never claims they do.
-- **Not an admission predictor.** Cut-offs, entrance ranks and seat matrices vary
-  by year, college and category. Every claim points the student back to the
-  institution.
-- **Not a biology pathway.** Neither campus offers a biology track, so none is
-  listed. That is a statement about the catalogue, not about the student.
-- **Not a substitute for a counsellor.** It is a better set of questions and an
-  honest map — a conversation starter, not the last word.
-
----
 
 <div align="center">
 

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 230" width="1200" height="230" role="img" aria-label="What a student gets: six dimensions, an archetype, and ranked courses">
+  <defs>
+    <clipPath id="sClip"><rect width="1200" height="230" rx="16"/></clipPath>
+    <radialGradient id="sGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g clip-path="url(#sClip)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+    <rect width="1200" height="230" fill="#0B1226"/>
+    <circle cx="300" cy="120" r="170" fill="url(#sGlow)"/>
+    <text x="40" y="38" font-size="12" letter-spacing="2.6" fill="#6B7794">WHAT A STUDENT GETS</text>
+
+    <!-- Six dimensions filling -->
+    <g transform="translate(80 66)">
+      <text y="0" font-size="12" letter-spacing="1.8" fill="#8A97B4">SIX DIMENSIONS</text>
+      <g transform="translate(0 16)">
+        <g>
+          <text y="12" font-size="12" fill="#A3AEC7">Technology</text>
+          <rect x="104" y="4" width="180" height="8" rx="4" fill="#FFFFFF" fill-opacity="0.08"/>
+          <rect x="104" y="4" width="0" height="8" rx="4" fill="#FF6B35">
+            <animate attributeName="width" values="0;148;148" keyTimes="0;0.45;1" dur="6s" begin="0s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+        <g transform="translate(0 24)">
+          <text y="12" font-size="12" fill="#A3AEC7">Analytical</text>
+          <rect x="104" y="4" width="180" height="8" rx="4" fill="#FFFFFF" fill-opacity="0.08"/>
+          <rect x="104" y="4" width="0" height="8" rx="4" fill="#E0567A">
+            <animate attributeName="width" values="0;137;137" keyTimes="0;0.45;1" dur="6s" begin="0.12s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+        <g transform="translate(0 48)">
+          <text y="12" font-size="12" fill="#A3AEC7">Creativity</text>
+          <rect x="104" y="4" width="180" height="8" rx="4" fill="#FFFFFF" fill-opacity="0.08"/>
+          <rect x="104" y="4" width="0" height="8" rx="4" fill="#7C6BF5">
+            <animate attributeName="width" values="0;115;115" keyTimes="0;0.45;1" dur="6s" begin="0.24s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+        <g transform="translate(0 72)">
+          <text y="12" font-size="12" fill="#A3AEC7">Engineering</text>
+          <rect x="104" y="4" width="180" height="8" rx="4" fill="#FFFFFF" fill-opacity="0.08"/>
+          <rect x="104" y="4" width="0" height="8" rx="4" fill="#1F9D8B">
+            <animate attributeName="width" values="0;86;86" keyTimes="0;0.45;1" dur="6s" begin="0.36s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+        <g transform="translate(0 96)">
+          <text y="12" font-size="12" fill="#A3AEC7">Business</text>
+          <rect x="104" y="4" width="180" height="8" rx="4" fill="#FFFFFF" fill-opacity="0.08"/>
+          <rect x="104" y="4" width="0" height="8" rx="4" fill="#E0A400">
+            <animate attributeName="width" values="0;65;65" keyTimes="0;0.45;1" dur="6s" begin="0.48s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+      </g>
+    </g>
+
+    <!-- The archetype that results -->
+    <g transform="translate(430 96)">
+      <rect width="250" height="66" rx="14" fill="#141F3E" stroke="#FF6B35" stroke-opacity="0.4"/>
+      <text x="18" y="26" font-size="10.5" letter-spacing="2" fill="#8A97B4">YOUR ARCHETYPE</text>
+      <text x="18" y="50" font-size="19" font-weight="800" fill="#FFFFFF">
+        <tspan>The Digital Innovator</tspan>
+        <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.28;0.33;0.95;1" dur="9s" repeatCount="indefinite"/>
+      </text>
+      <text x="18" y="50" font-size="19" font-weight="800" fill="#FFFFFF" opacity="0">
+        <tspan>The Systems Builder</tspan>
+        <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.33;0.38;0.62;0.67" dur="9s" repeatCount="indefinite"/>
+      </text>
+      <text x="18" y="50" font-size="19" font-weight="800" fill="#FFFFFF" opacity="0">
+        <tspan>The Pattern Analyst</tspan>
+        <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.67;0.72;0.92;0.96" dur="9s" repeatCount="indefinite"/>
+      </text>
+    </g>
+
+    <!-- Ranked courses, each with a real label -->
+    <g transform="translate(720 54)" font-size="12.5">
+      <text y="0" font-size="12" letter-spacing="1.8" fill="#8A97B4">RANKED COURSES</text>
+
+      <g transform="translate(0 16)">
+        <rect width="420" height="34" rx="10" fill="#141F3E" stroke="#FF6B35" stroke-opacity="0.45"/>
+        <text x="16" y="22" fill="#EEF1F8" font-weight="700">B.E. Computer Science</text>
+        <rect x="290" y="8" width="116" height="18" rx="9" fill="#FF6B35"/>
+        <text x="348" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="#FFFFFF">STRONG MATCH</text>
+        <animateTransform attributeName="transform" type="translate" values="-24,16; 0,16" dur="0.6s" fill="freeze"/>
+      </g>
+
+      <g transform="translate(0 58)">
+        <rect width="420" height="34" rx="10" fill="#141F3E" stroke="#2A3558"/>
+        <text x="16" y="22" fill="#C3CDE6" font-weight="600">BCA</text>
+        <rect x="282" y="8" width="124" height="18" rx="9" fill="#2A3558"/>
+        <text x="344" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="#C3CDE6">EXPLORE FURTHER</text>
+        <animateTransform attributeName="transform" type="translate" values="-24,58; 0,58" dur="0.6s" begin="0.15s" fill="freeze"/>
+      </g>
+
+      <g transform="translate(0 100)">
+        <rect width="420" height="34" rx="10" fill="#141F3E" stroke="#2A3558"/>
+        <text x="16" y="22" fill="#C3CDE6" font-weight="600">B.Com</text>
+        <rect x="276" y="8" width="130" height="18" rx="9" fill="#1A2548"/>
+        <text x="341" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="#8A97B4">ALTERNATIVE PATH</text>
+        <animateTransform attributeName="transform" type="translate" values="-24,100; 0,100" dur="0.6s" begin="0.3s" fill="freeze"/>
+      </g>
+
+      <text y="152" font-size="11" fill="#6B7794">Relative fit only. A percentage is never shown.</text>
+    </g>
+  </g>
+</svg>

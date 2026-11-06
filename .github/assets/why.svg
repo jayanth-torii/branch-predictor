@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 230" width="1200" height="230" role="img" aria-label="Most quizzes answer with a black box; this one shows the reasoning">
+  <defs>
+    <linearGradient id="wSweep" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#FFC6AE" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="wClip"><rect width="1200" height="230" rx="16"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#wClip)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+    <rect width="1200" height="230" fill="#0B1226"/>
+    <text x="40" y="38" font-size="12" letter-spacing="2.6" fill="#6B7794">WHY THIS EXISTS</text>
+
+    <!-- LEFT: the black box every other quiz hands you -->
+    <g transform="translate(90 62)">
+      <rect width="400" height="130" rx="16" fill="#141F3E" stroke="#2A3558"/>
+      <text x="24" y="34" font-size="12" letter-spacing="2" fill="#6B7794">MOST CAREER QUIZZES</text>
+
+      <!-- a sealed box, breathing -->
+      <g transform="translate(60 84)">
+        <rect x="-32" y="-26" width="64" height="52" rx="8" fill="#0B1226" stroke="#3A4568"/>
+        <text y="9" text-anchor="middle" font-size="26" font-weight="800" fill="#4A5578">?</text>
+        <animateTransform attributeName="transform" type="translate"
+          values="60,84; 60,80; 60,84" dur="3.6s" repeatCount="indefinite"/>
+      </g>
+
+      <!-- the fake precision, struck through -->
+      <text x="118" y="84" font-size="30" font-weight="800" fill="#4A5578">92% match</text>
+      <rect x="112" y="74" width="0" height="4" rx="2" fill="#FF6B35">
+        <animate attributeName="width" values="0;196;196;0" keyTimes="0;0.35;0.8;1"
+                 dur="4.4s" repeatCount="indefinite"/>
+      </rect>
+      <text x="118" y="110" font-size="13" fill="#5C6789">no reasoning shown</text>
+    </g>
+
+    <!-- the divider -->
+    <text x="520" y="134" font-size="22" font-weight="700" fill="#3A4568">vs</text>
+
+    <!-- RIGHT: the reasoning, drawn in -->
+    <g transform="translate(570 62)">
+      <rect width="540" height="130" rx="16" fill="#141F3E" stroke="#FF6B35" stroke-opacity="0.35"/>
+      <text x="24" y="34" font-size="12" letter-spacing="2" fill="#FF8A5F">BRANCH PREDICTOR</text>
+
+      <!-- three reasoning rows that fill in sequence -->
+      <g transform="translate(24 54)">
+        <text y="10" font-size="12.5" fill="#A3AEC7">Technology</text>
+        <rect x="112" y="2" width="300" height="9" rx="4.5" fill="#FFFFFF" fill-opacity="0.08"/>
+        <rect x="112" y="2" width="0" height="9" rx="4.5" fill="#FF6B35">
+          <animate attributeName="width" values="0;246;246;0" keyTimes="0;0.3;0.85;1"
+                   dur="5s" begin="0s" repeatCount="indefinite"/>
+        </rect>
+
+        <text y="36" font-size="12.5" fill="#A3AEC7">Analytical</text>
+        <rect x="112" y="28" width="300" height="9" rx="4.5" fill="#FFFFFF" fill-opacity="0.08"/>
+        <rect x="112" y="28" width="0" height="9" rx="4.5" fill="#7C6BF5">
+          <animate attributeName="width" values="0;210;210;0" keyTimes="0;0.3;0.85;1"
+                   dur="5s" begin="0.25s" repeatCount="indefinite"/>
+        </rect>
+
+        <text y="62" font-size="12.5" fill="#A3AEC7">Stream gate</text>
+        <rect x="112" y="54" width="300" height="9" rx="4.5" fill="#FFFFFF" fill-opacity="0.08"/>
+        <rect x="112" y="54" width="0" height="9" rx="4.5" fill="#1F9D8B">
+          <animate attributeName="width" values="0;300;300;0" keyTimes="0;0.3;0.85;1"
+                   dur="5s" begin="0.5s" repeatCount="indefinite"/>
+        </rect>
+
+        <!-- the label that results -->
+        <g opacity="0">
+          <rect x="430" y="18" width="92" height="28" rx="14" fill="#FF6B35"/>
+          <text x="476" y="37" text-anchor="middle" font-size="11.5" font-weight="800" fill="#FFFFFF">STRONG</text>
+          <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.34;0.46;0.85;1"
+                   dur="5s" repeatCount="indefinite"/>
+        </g>
+      </g>
+    </g>
+
+    <rect x="0" y="226" width="220" height="2" fill="url(#wSweep)">
+      <animate attributeName="x" values="-220;1200;-220" dur="8s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+</svg>
