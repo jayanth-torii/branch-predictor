@@ -1,69 +1,62 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { AfterRevealSection } from "@/components/landing/after-reveal";
+import { ExperienceSection } from "@/components/landing/experience";
+import { EducatorsSection } from "@/components/landing/educators";
+import { ExplainableSection } from "@/components/landing/explainable";
+import { Hero } from "@/components/landing/hero";
+import { UniverseSection } from "@/components/landing/universe";
+import { SiteFooter } from "@/components/site-footer";
+import { Reveal } from "@/components/ui";
+import { COURSES } from "@/lib/courses";
 
-export default function Home() {
+/**
+ * The landing page is a composition, not a monolith. Each narrative section
+ * owns its own file and its own data under `components/landing/`, so one can be
+ * redesigned without touching the others.
+ */
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+    <main>
+      <Hero courseCount={COURSES.length} />
+      <ExperienceSection />
+      <ExplainableSection />
+      <UniverseSection />
+      <AfterRevealSection />
+
+      <EducatorsSection />
+
+      {/* Final CTA */}
+      <section className="mx-auto w-full max-w-6xl px-5 pb-4 sm:px-8">
+        <Reveal>
+          <div className="glass glass-sheen relative isolate overflow-hidden !rounded-[2rem] px-6 py-16 text-center sm:px-12 sm:py-24">
+            <div className="aurora" aria-hidden="true" />
+            <span
+              className="glow left-1/2 top-0 size-72 -translate-x-1/2 -translate-y-1/3"
+              aria-hidden="true"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <p className="eyebrow relative">Your move</p>
+            <h2 className="display relative mx-auto mt-3 max-w-2xl text-[2.1rem] leading-[1.06] text-balance text-midnight sm:text-[3.2rem]">
+              You do not need to know the answer yet.
+            </h2>
+            <p className="relative mx-auto mt-4 max-w-lg text-[0.98rem] leading-relaxed text-slate-ink">
+              You need better questions. Ten of them, about five minutes, and a profile you can
+              actually argue with.
+            </p>
+            <div className="relative mt-8 flex flex-wrap justify-center gap-3">
+              <Link href="/discover" className="btn btn-primary">
+                Start my journey
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <Link href="/courses" className="btn btn-ghost">
+                Explore UG courses
+              </Link>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      <SiteFooter />
+    </main>
   );
 }

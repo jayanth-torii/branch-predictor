@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Pathora AI — discover the course that feels like you">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0B1226"/>
+      <stop offset="55%" stop-color="#101B3D"/>
+      <stop offset="100%" stop-color="#16233F"/>
+    </linearGradient>
+
+    <radialGradient id="bloomA" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bloomB" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4A70FF" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#4A70FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bloomC" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6750E6" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#6750E6" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#FF8A5F" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </linearGradient>
+
+    <clipPath id="frame"><rect width="1200" height="320" rx="20"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="320" fill="url(#sky)"/>
+
+    <!-- Aurora: three blooms drifting on different periods so the field never
+         visibly loops. -->
+    <g opacity="0.95">
+      <circle cx="220" cy="90" r="260" fill="url(#bloomA)">
+        <animateTransform attributeName="transform" type="translate"
+          values="0,0; 70,40; -30,20; 0,0" dur="19s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="980" cy="70" r="240" fill="url(#bloomB)">
+        <animateTransform attributeName="transform" type="translate"
+          values="0,0; -60,50; 40,-20; 0,0" dur="23s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="640" cy="300" r="280" fill="url(#bloomC)">
+        <animateTransform attributeName="transform" type="translate"
+          values="0,0; 40,-50; -50,10; 0,0" dur="27s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- Orbit rings -->
+    <g stroke="#FFFFFF" stroke-opacity="0.08" fill="none">
+      <circle cx="1010" cy="160" r="118">
+        <animateTransform attributeName="transform" type="rotate"
+          from="0 1010 160" to="360 1010 160" dur="46s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="1010" cy="160" r="86" stroke-dasharray="3 9">
+        <animateTransform attributeName="transform" type="rotate"
+          from="360 1010 160" to="0 1010 160" dur="32s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- The six interest dimensions, as a radar forming inside the core -->
+    <g transform="translate(1010 160)">
+      <circle r="60" fill="#0B1226" stroke="#FFFFFF" stroke-opacity="0.12"/>
+      <polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22"
+               fill="none" stroke="#FFFFFF" stroke-opacity="0.14"/>
+      <polygon points="0,-26 23,-13 23,13 0,26 -23,13 -23,-13"
+               fill="none" stroke="#FFFFFF" stroke-opacity="0.1"/>
+      <polygon points="0,-36 30,-10 22,20 0,15 -25,16 -30,-14"
+               fill="#FF6B35" fill-opacity="0.32" stroke="#FF8A5F" stroke-width="2"
+               stroke-linejoin="round">
+        <animate attributeName="points"
+          values="0,-36 30,-10 22,20 0,15 -25,16 -30,-14;
+                  0,-28 34,-16 18,24 0,20 -20,12 -26,-18;
+                  0,-36 30,-10 22,20 0,15 -25,16 -30,-14"
+          dur="7s" repeatCount="indefinite"/>
+      </polygon>
+    </g>
+
+    <!-- Wordmark -->
+    <g transform="translate(78 118)">
+      <circle cx="16" cy="-6" r="17" fill="#FF6B35" opacity="0.18"/>
+      <circle cx="16" cy="-6" r="9" fill="#FF6B35"/>
+      <text x="44" y="2" font-family="Segoe UI, Inter, system-ui, sans-serif"
+            font-size="40" font-weight="800" fill="#FFFFFF" letter-spacing="-1">
+        Pathora <tspan fill="#FF6B35">AI</tspan>
+      </text>
+
+      <text x="0" y="52" font-family="Segoe UI, Inter, system-ui, sans-serif"
+            font-size="26" font-weight="600" fill="#C3CDE6">
+        Discover the course that feels like
+        <tspan fill="#FF8A5F" font-weight="800">YOU.</tspan>
+      </text>
+
+      <text x="0" y="92" font-family="Segoe UI, Inter, system-ui, sans-serif"
+            font-size="15" fill="#8A97B4" letter-spacing="2.4">
+        25 QUESTIONS &#160;·&#160; 6 DIMENSIONS &#160;·&#160; 0 GUESSWORK
+      </text>
+
+      <!-- Light sweeping along the baseline -->
+      <rect x="0" y="108" width="340" height="2" rx="1" fill="url(#sweep)">
+        <animate attributeName="x" values="-340; 560; -340" dur="6s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+  </g>
+</svg>

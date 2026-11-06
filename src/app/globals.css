@@ -1,26 +1,971 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PATHORA AI — AURORA GLASS DESIGN SYSTEM
+   ---------------------------------------------------------------------------
+   THEMING CONTRACT (read before changing a colour anywhere):
+
+   Most colour tokens FLIP between themes, so a utility written once works in
+   both. `--color-midnight` is the clearest example: it is the high-contrast
+   "ink" token, deep navy in light and near-white in dark. That single flip
+   carries 148 `text-midnight`, 92 `border-midnight/*` and 14 `bg-midnight/*`
+   usages for free, which is why it was chosen over a rename.
+
+   The consequence: midnight is NOT a surface. A panel that must stay dark in
+   BOTH themes uses `--color-navy` (fixed). Never `bg-midnight`.
+
+     FLIPPING : arctic(page) midnight(ink) slate-ink(ink-2) fog peach indigo
+                surface surface-2 line glass glass-line
+     FIXED    : orange orange-soft navy  (brand + always-dark panels)
+
+   Dark values live in the `[data-theme="dark"]` block below. Tailwind v4 emits
+   `var(--color-x)` references rather than literals, so overriding the variable
+   at runtime re-skins every utility — including opacity modifiers, which
+   compile to `color-mix(… var(--color-x) …)`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* Page / ink / tints — every one of these flips (see [data-theme="dark"]). */
+  --color-arctic: #f7f8fc;
+  --color-midnight: #101b3d;
+  --color-slate-ink: #59657f;
+  --color-indigo: #25345b;
+  --color-peach: #fff1e8;
+  --color-fog: #e9edf7;
+  --color-surface: #ffffff;
+  --color-surface-2: #f2f4fa;
+
+  /* Fixed brand — identical in both themes. */
+  --color-orange: #ff6b35;
+  --color-orange-soft: #ff8a5f;
+  /* Always-dark panel surface. Use this, never `midnight`, for a dark card. */
+  --color-navy: #0b1226;
+
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-soft: 0 18px 50px -28px rgba(16, 27, 61, 0.28);
+  --shadow-lift: 0 32px 80px -36px rgba(16, 27, 61, 0.45);
+
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Hairlines and frosted glass. Separate from the palette because they are
+     alpha-on-background, not colours, and the alpha differs per theme. */
+  --line: rgba(16, 27, 61, 0.08);
+  --line-strong: rgba(16, 27, 61, 0.14);
+  --glass-bg: rgba(255, 255, 255, 0.66);
+  --glass-line: rgba(255, 255, 255, 0.9);
+  --glass-blur: 20px;
+
+  /* Aurora mesh stops. Light keeps them pale so text stays legible on top. */
+  --aurora-1: rgba(255, 138, 95, 0.38);
+  --aurora-2: rgba(120, 155, 255, 0.3);
+  --aurora-3: rgba(255, 196, 160, 0.34);
+  --aurora-4: rgba(165, 190, 255, 0.26);
+  --glow-orange: rgba(255, 107, 53, 0.4);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-arctic: #080c1a;
+  --color-midnight: #eef1f8;
+  --color-slate-ink: #98a4bf;
+  --color-indigo: #c3cde6;
+  --color-peach: #2b1a12;
+  --color-fog: #18203a;
+  --color-surface: #101832;
+  --color-surface-2: #16203c;
+
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-line: rgba(255, 255, 255, 0.1);
+
+  /* Dark carries more saturation: the same alpha reads as grey on near-black. */
+  --aurora-1: rgba(255, 107, 53, 0.3);
+  --aurora-2: rgba(74, 112, 255, 0.3);
+  --aurora-3: rgba(255, 138, 95, 0.2);
+  --aurora-4: rgba(103, 80, 230, 0.26);
+  --glow-orange: rgba(255, 107, 53, 0.55);
+
+  --shadow-soft: 0 18px 50px -28px rgba(0, 0, 0, 0.7);
+  --shadow-lift: 0 32px 80px -36px rgba(0, 0, 0, 0.85);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-arctic);
+  color: var(--color-midnight);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-orange);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+
+.eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  /* Was a hardcoded #6b7794, which did not flip and measured 3.91:1 on the
+     dark page — under AA for an 11px label, and this is the most-used micro
+     label in the app. The token gives ~7:1 dark and ~5.8:1 light. */
+  color: var(--color-slate-ink);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--line);
+  border-radius: 1.6rem;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Always dark, in both themes — hence `navy`, not the flipping `midnight`. */
+.card-dark {
+  background: var(--color-navy);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.6rem;
+  color: #f8f9fc;
+}
+
+/* ── Aurora glass ─────────────────────────────────────────────────────────
+   `.glass` is the signature surface: a translucent panel that lets the aurora
+   mesh behind it bleed through. It needs something behind it to be worth the
+   blur, so use it over `.aurora`, never on a flat background. */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  border-radius: 1.6rem;
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  box-shadow: var(--shadow-soft);
+}
+
+/* A hairline that catches the light along the top edge, like real glass. */
+.glass-sheen {
+  position: relative;
+  isolation: isolate;
+}
+.glass-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-orange) 55%, transparent),
+    transparent
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* The aurora field itself: four drifting colour blooms. Sits behind content,
+   so it is always paired with a positioned parent and `-z-10`-style layering. */
+.aurora {
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38rem 26rem at 12% 12%, var(--aurora-1) 0%, transparent 62%),
+    radial-gradient(34rem 24rem at 88% 8%, var(--aurora-2) 0%, transparent 64%),
+    radial-gradient(36rem 26rem at 72% 88%, var(--aurora-3) 0%, transparent 66%),
+    radial-gradient(30rem 22rem at 24% 82%, var(--aurora-4) 0%, transparent 64%);
+  filter: blur(14px);
+  animation: aurora-drift 26s var(--ease-soft) infinite alternate;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -2%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-2%, 2%, 0) scale(1.03);
+  }
+}
+
+/* An orange bloom used behind a focal element (hero CTA, logo, stat). */
+.glow {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 999px;
+  background: var(--glow-orange);
+  filter: blur(56px);
+}
+
+/* CASCADE NOTE for .chip and .btn below.
+   These are unlayered rules, while every Tailwind utility sits in the
+   `utilities` cascade layer — and an unlayered declaration beats a layered one.
+   So a utility that targets a property these classes already set will silently
+   lose: `className="chip hidden"` stays visible, `btn py-2`'s padding is
+   ignored. Escape hatches, in order of preference:
+     1. a plain modifier class declared after this one (see .chip-xs)
+     2. the `!` important modifier on the utility (`!hidden`, `!py-2.5`)
+   The structural fix is to wrap these base classes in `@layer components` so
+   utilities win normally; that changes precedence for every call site at once,
+   so it wants its own pass rather than a drive-by edit. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--color-surface);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-indigo);
+  white-space: nowrap;
+}
+
+/* Size modifiers for .chip. Call sites used to reach for `!text-[0.6rem]`, but
+   a Tailwind `!important` utility sits in a cascade layer the phone type floor
+   cannot override, so those chips stayed at 9-10px on a phone. These plain
+   classes beat `.chip` by source order and the mobile layer can raise them. */
+.chip-xs {
+  font-size: 0.62rem;
+}
+.chip-sm {
+  font-size: 0.68rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.85rem 1.5rem;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--color-orange);
+  color: #fff;
+  box-shadow: 0 14px 34px -16px rgba(255, 107, 53, 0.85);
+}
+
+/* HOVER GUARD — why these three rules share one media query.
+   Tailwind v4 compiles every `hover:` utility inside `@media (hover: hover)`,
+   so a `hover:-translate-y-1` can never stick on a touch screen. These rules
+   are hand-written CSS, not utilities, so they get no such guard: on a phone
+   `:hover` latches on tap and holds until the next tap lands elsewhere, which
+   left the last-tapped button sitting lifted and in its darker hover colour.
+   Guarding them here is the complete fix — it covers background and shadow,
+   not just transform — and it keeps the rule next to what it modifies. */
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: #f25a24;
+    transform: translateY(-1px);
+    box-shadow: 0 20px 40px -16px rgba(255, 107, 53, 0.75);
+  }
+
+  .btn-dark:hover {
+    background: var(--color-indigo);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost:hover {
+    background: var(--color-surface);
+    border-color: var(--line-strong);
+  }
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-dark {
+  background: var(--color-midnight);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--color-midnight);
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.028;
+  /* `multiply` darkens, which is invisible-to-muddy on a near-black page;
+     dark flips to `screen` so the grain lightens instead (see below). */
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Kept for call sites that want a static tint rather than the animated field;
+   now themed, so it darkens instead of staying pastel in dark mode. */
+.mesh {
+  background:
+    radial-gradient(720px 420px at 12% 8%, var(--aurora-1) 0%, transparent 62%),
+    radial-gradient(620px 400px at 92% 12%, var(--aurora-2) 0%, transparent 66%),
+    radial-gradient(700px 460px at 60% 96%, var(--aurora-3) 0%, transparent 70%);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+  }
+}
+
+@keyframes orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-110%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+.animate-orbit {
+  animation: orbit-spin 26s linear infinite;
+}
+.animate-pulse-soft {
+  animation: pulse-soft 5s ease-in-out infinite;
+}
+.animate-scan {
+  animation: scan 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE LAYER — phones (<768px) and the compact shell (<1024px).
+   ---------------------------------------------------------------------------
+   Everything below this banner lives inside a `max-width` media query, so the
+   desktop rendering (>=1024px) is exactly what it was before. Add new phone
+   rules HERE rather than sprinkling `sm:` overrides through pages, so there is
+   one place to read the whole mobile contract.
+
+   Conventions (Material 3 / iOS HIG, whichever is stricter):
+     - 44px minimum touch target (iOS floor; Material asks for 48dp)
+     - 16px inputs on iOS only, to stop Safari zooming the page on focus
+     - safe-area insets on every edge (needs viewport-fit=cover, set in layout)
+     - no hover lifts: they stick after a tap and leave elements visibly raised
+     - bottom navigation owns the bottom strip; pinned bars sit above it
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Mobile bottom navigation height, excluding the home-indicator inset. */
+  --m-nav-h: 62px;
+  --m-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --m-safe-top: env(safe-area-inset-top, 0px);
+  /* Sticky site header height, used for scroll-padding so anchors clear it. */
+  --m-header-h: 72px;
+}
+
+@media (max-width: 1023.98px) {
+  /* Landscape notched phones: keep content out from under the cutout. */
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* The header is sticky, so anchor jumps and focus scrolls must clear it. */
+  html {
+    scroll-padding-top: calc(var(--m-header-h) + var(--m-safe-top) + 0.5rem);
+  }
+
+  /* Kill the grey flash on tap: our own :active states give the feedback. */
+  a,
+  button,
+  [role="button"],
+  [role="tab"],
+  label,
+  summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* (The hover lifts that used to be neutralised here are now guarded at their
+     source by `@media (hover: hover)` — see the HOVER GUARD note above.) */
+
+  /* Horizontal rails (filter chips, admin tabs): swipeable, snapped, no bar. */
+  .m-scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .m-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+  .m-scroll-x > * {
+    scroll-snap-align: start;
+  }
+
+  /* Pinned action bars clear the bottom navigation instead of hiding under it. */
+  .m-above-nav {
+    bottom: calc(var(--m-nav-h) + var(--m-safe-bottom)) !important;
+  }
+
+  /* ── Implicit grid tracks ───────────────────────────────────────────────
+     31 grids in this app declare their columns only at a breakpoint
+     (`grid gap-4 lg:grid-cols-2`). Below that breakpoint there is no explicit
+     template, so every item lands in an implicit `auto` track — and an `auto`
+     track sizes to the items' max-content, which can be wider than the grid
+     container. The admin analytics heatmap did exactly that: a 335px container
+     with a 371px track, pushing 16px past the viewport.
+
+     Clamping implicit columns to `minmax(0, 1fr)` makes a single-column stack
+     always fit its container. Grids that DO declare explicit columns are
+     unaffected, and nothing in this app uses `grid-flow-col`, which is the one
+     pattern that wants max-content implicit columns. */
+  .grid {
+    grid-auto-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* ── Touch targets ──────────────────────────────────────────────────────
+     .btn is 0.85rem/1.5rem padding, about 42px, and the `!py-2.5` call sites
+     drop to roughly 36px. Both are under the 44px floor, so set a min-height
+     once here instead of chasing every variant. An `!py-*` override changes
+     padding, not height, so this floor survives it. */
+  .btn {
+    min-height: 2.75rem;
+    padding-left: 1.15rem;
+    padding-right: 1.15rem;
+  }
+
+  /* Chips double as tappable filters; give those a real hit area. */
+  button.chip,
+  a.chip {
+    min-height: 2.25rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  /* Native controls used by the admin filters and the discover form. */
+  select,
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea {
+    min-height: 2.75rem;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 1.15rem;
+    min-height: 1.15rem;
+  }
+
+  /* ── Type floor ─────────────────────────────────────────────────────────
+     The pages carry around 200 arbitrary sizes between 0.5rem and 0.76rem,
+     i.e. 8-12px. That reads fine on a 27-inch display and is unreadable at
+     arm's length on a phone. Rather than rewrite every call site (and risk
+     desktop regressions), lift each tier by roughly 1.5px here, on phones
+     only. New code should use a semantic size rather than a raw arbitrary one. */
+  .text-\[0\.5rem\],
+  .text-\[0\.55rem\],
+  .text-\[0\.56rem\],
+  .text-\[0\.58rem\],
+  .text-\[0\.6rem\],
+  .text-\[0\.62rem\] {
+    font-size: 0.6875rem;
+  }
+  .text-\[0\.64rem\],
+  .text-\[0\.65rem\],
+  .text-\[0\.66rem\],
+  .text-\[0\.68rem\],
+  .text-\[0\.7rem\] {
+    font-size: 0.75rem;
+  }
+  .text-\[0\.72rem\],
+  .text-\[0\.74rem\],
+  .text-\[0\.76rem\] {
+    font-size: 0.8125rem;
+  }
+
+  /* The micro-label is tracked out, so it stays one tier below body text. */
+  .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+  }
+
+  /* Same floor for the chip size modifiers declared next to `.chip` above. */
+  .chip-xs {
+    font-size: 0.6875rem;
+  }
+  .chip-sm {
+    font-size: 0.75rem;
+  }
+
+  /* Phones need the width for content, not for corner radius. */
+  .card {
+    border-radius: 1.25rem;
+  }
+
+  /* A bar pinned to the bottom of the viewport clears the home indicator. It
+     lives here rather than inline, so the desktop `md:pb-0` still wins. */
+  .m-pinned-bar {
+    padding-bottom: max(0.75rem, var(--m-safe-bottom));
+  }
+
+  /* ── Record cards ───────────────────────────────────────────────────────
+     The admin tables carry `min-w-[760px]`, which turns a phone into a
+     sideways scroll hunt. A table marked `.as-cards` becomes a card stack:
+
+       +------------------------------+
+       | Headline            (status) |   td[data-role="title"]
+       |------------------------------|
+       | Label                  value |   td[data-role="meta"] + data-label
+       | Label                  value |
+       |------------------------------|
+       | [          Action          ] |   td[data-role="actions"]
+       +------------------------------+
+
+     Rows marked `data-full-row` (expanded detail panels) stay full-bleed. */
+  .as-cards thead {
+    display: none;
+  }
+  .as-cards table,
+  .as-cards tbody,
+  .as-cards tr,
+  .as-cards td {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .as-cards tbody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  .as-cards tr {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--color-surface);
+    padding: 0.875rem 1rem 0.75rem;
+  }
+  .as-cards td {
+    padding: 0;
+    font-size: 0.8125rem;
+  }
+
+  .as-cards td[data-role="title"] {
+    padding-bottom: 0.625rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .as-cards td[data-role="meta"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: 1rem;
+    row-gap: 0.2rem;
+    min-height: 2.5rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--line);
+    text-align: right;
+    font-weight: 500;
+  }
+  .as-cards td[data-role="meta"]::before {
+    content: attr(data-label);
+    flex: 0 1 auto;
+    max-width: 50%;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: left;
+    color: var(--color-slate-ink);
+  }
+  .as-cards td[data-role="meta"] > * {
+    margin-left: auto;
+    min-width: 0;
+    text-align: right;
+  }
+
+  /* Long values and controls take the full width under their label instead of
+     being squeezed into a right-hand column. */
+  .as-cards td[data-role="wide"] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--line);
+    text-align: left;
+  }
+  .as-cards td[data-role="wide"]::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-slate-ink);
+  }
+
+  .as-cards td[data-role="actions"] {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--line);
+    text-align: left;
+  }
+  /* 2.75rem, not 2.5rem: a card's footer action is a primary control and must
+     meet the same 44px floor as `.btn`. This rule is unlayered, so a page can
+     only beat it with `!important` — keeping it correct here means no call site
+     has to. */
+  .as-cards td[data-role="actions"] > * {
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+  }
+
+  /* A field the page marks as secondary is dropped on phones but kept on the
+     desktop table, so a narrow screen shows the things that matter. */
+  .as-cards td[data-mhide] {
+    display: none !important;
+  }
+
+  /* Expanded detail rows are a panel attached to the card above them, not
+     another card: the <tr> stops being the surface and its single <td> takes
+     over, so `colSpan` content keeps its own padding. */
+  .as-cards tr[data-full-row] {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .as-cards tr[data-full-row] > td {
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--color-arctic);
+  }
+}
+
+/* iOS Safari only (-webkit-touch-callout is WebKit-on-iOS): a field under 16px
+   makes Safari zoom the whole page when it takes focus, and it never zooms
+   back. Desktop and Android keep the compact controls. */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 767.98px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+}
+
+/* ── Mobile navigation shell ──────────────────────────────────────────────── */
+
+/* The bar and its spacer are phone-only, and that visibility is decided HERE
+   rather than with a `md:hidden` utility on the element. `.m-nav` is an
+   unlayered rule that sets `display`, and an unlayered declaration beats
+   Tailwind's layered utilities — so `md:hidden` silently lost and the bar
+   rendered across the bottom of the desktop layout. */
+.m-nav,
+.m-nav-spacer {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .m-nav {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 60;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+    height: calc(var(--m-nav-h) + var(--m-safe-bottom));
+    padding-bottom: var(--m-safe-bottom);
+    border-top: 1px solid var(--line);
+    /* Was a hardcoded rgba(248,249,252,.92), so in dark the bar stayed almost
+       white while the label colour inverted to light grey — 2:1 contrast.
+       Mixing the page token keeps the frosted look and flips with the theme. */
+    background: color-mix(in srgb, var(--color-arctic) 92%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  /* Reserves exactly the strip the fixed bar covers. */
+  .m-nav-spacer {
+    display: block;
+    height: calc(var(--m-nav-h) + var(--m-safe-bottom));
+  }
+}
+
+.m-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  /* 11px, matching the phone type floor. iOS tab bars use 10pt, but the floor
+     is the stricter rule and these five labels still fit at 375px. */
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-slate-ink);
+  transition: color 0.18s ease;
+}
+.m-nav-item[data-active="true"] {
+  color: var(--color-orange);
+}
+.m-nav-item:active {
+  transform: scale(0.96);
+}
+/* The active pill sits behind the icon so the label never shifts position. */
+.m-nav-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.m-nav-item[data-active="true"] .m-nav-icon {
+  background: var(--color-peach);
+}
+
+/* Scrim and sheet for the header menu. z-61 clears the bottom navigation (60)
+   so the whole page behind the sheet is both dimmed and untappable; the header
+   itself is lifted to 63 while open. */
+.m-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 61;
+  background: rgba(16, 27, 61, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: m-fade-in 0.2s ease both;
+}
+
+.m-sheet {
+  animation: m-sheet-in 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes m-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes m-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Dark: the grain must lighten, not darken, or it reads as dirt on near-black. */
+[data-theme="dark"] .grain {
+  mix-blend-mode: screen;
+  opacity: 0.02;
+}
+
+/* Theme transition. Scoped to the properties that actually change so it never
+   fights layout or the aurora animation, and disabled while the user is
+   actively dragging the toggle is unnecessary — the swap is a single commit. */
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .card,
+  .chip,
+  .glass,
+  .card-dark {
+    transition:
+      background-color 0.3s var(--ease-soft),
+      border-color 0.3s var(--ease-soft),
+      color 0.3s var(--ease-soft);
+  }
+}
+
+/* ── Theme toggle icons ───────────────────────────────────────────────────
+   Driven entirely by the `data-theme` attribute so the button needs no React
+   state and cannot flash the wrong icon during hydration. Light shows the sun
+   (the current theme), dark shows the moon. */
+.theme-icon-sun,
+.theme-icon-moon {
+  transition:
+    opacity 0.3s var(--ease-soft),
+    transform 0.3s var(--ease-soft);
+}
+.theme-icon-moon {
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+}
+[data-theme="dark"] .theme-icon-sun {
+  opacity: 0;
+  transform: scale(0.5) rotate(90deg);
+}
+[data-theme="dark"] .theme-icon-moon {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Above-the-fold entrance ──────────────────────────────────────────────
+   The hero used framer-motion `initial/animate`, which server-renders
+   `opacity:0` and only reveals once React hydrates — 40 elements on the
+   landing page shipped invisible, so a slow phone saw a blank hero.
+
+   CSS keyframes paint on the first frame with no JS, so the hero is visible
+   immediately and still animates. `both` fill mode matters: the global
+   prefers-reduced-motion rule collapses the duration to ~0, and `both` makes
+   the element hold the END state rather than the invisible start state.
+
+   Use `--rise-delay` to stagger, `--rise-y` / `--rise-blur` to vary. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-y, 16px));
+    filter: blur(var(--rise-blur, 0px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.rise {
+  animation: rise-in 0.65s var(--ease-soft) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+
+/* ── Always-dark band ─────────────────────────────────────────────────────
+   The footer (and any section that wants to be dark in BOTH themes) is a
+   contrast anchor: a page of uniformly near-white sections reads thin, however
+   good each one is on its own.
+
+   Rather than rewriting every utility inside it, re-point the FLIPPING tokens
+   for the subtree. `midnight` is the ink token, so making it near-white here
+   means every existing `text-midnight`, `text-slate-ink`, `border-midnight/…`
+   and `.card` inside the band resolves correctly with no markup change — which
+   is the whole reason those were tokens rather than literal colours. */
+.band-dark {
+  color-scheme: dark;
+  --color-midnight: #eef1f8;
+  --color-slate-ink: #a3aec7;
+  --color-indigo: #c3cde6;
+  --color-surface: #141f3e;
+  --color-surface-2: #1a2548;
+  --color-fog: #18203a;
+  --color-peach: #2b1a12;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --aurora-1: rgba(255, 107, 53, 0.26);
+  --aurora-2: rgba(74, 112, 255, 0.26);
+  --aurora-3: rgba(255, 138, 95, 0.18);
+  --aurora-4: rgba(103, 80, 230, 0.22);
+  --glow-orange: rgba(255, 107, 53, 0.5);
+  background-color: var(--color-navy);
+  color: var(--color-midnight);
 }
