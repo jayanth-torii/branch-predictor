@@ -60,8 +60,8 @@ batchesRouter.get("/", async (_req, res) => {
   try {
     const batches = await BatchModel.find({}).sort({ createdAt: 1 }).lean();
     return res.json({ batches: (batches ?? []).map(sanitizeBatch) });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });
 
@@ -99,8 +99,8 @@ batchesRouter.post("/", async (req, res) => {
     });
 
     return res.status(201).json({ batch: sanitizeBatch(batch), status: "created" });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });
 
@@ -128,8 +128,8 @@ batchesRouter.delete("/", async (req, res) => {
       return notFound(res);
     }
     return res.json({ deleted: true });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });
 
@@ -153,8 +153,8 @@ batchesRouter.get("/:code", async (req, res) => {
     const batch = await BatchModel.findOne({ code }).lean();
     if (!batch) return notFound(res);
     return res.json({ batch: sanitizeBatch(batch) });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });
 
@@ -185,8 +185,8 @@ batchesRouter.patch("/:code", async (req, res) => {
     if (!updated) return notFound(res);
 
     return res.json({ batch: sanitizeBatch(updated) });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });
 
@@ -202,7 +202,7 @@ batchesRouter.delete("/:code", async (req, res) => {
       return notFound(res);
     }
     return res.json({ deleted: true });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });

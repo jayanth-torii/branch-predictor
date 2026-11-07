@@ -1,4 +1,22 @@
+import dns from "node:dns";
 import mongoose from "mongoose";
+
+/**
+ * Optional DNS override, off unless DNS_SERVERS is set.
+ *
+ * A `mongodb+srv://` URI needs an SRV lookup, and some resolvers — corporate
+ * DNS, a VPN adapter, certain home routers — refuse SRV and fail the connection
+ * with ECONNREFUSED before a single packet reaches Atlas. Pointing this process
+ * at a resolver that answers SRV fixes it. It stays opt-in so a normal
+ * deployment keeps using the platform's own DNS.
+ */
+const DNS_SERVERS = (process.env.DNS_SERVERS ?? "")
+  .split(",")
+  .map((entry) => entry.trim())
+  .filter(Boolean);
+if (DNS_SERVERS.length > 0) {
+  dns.setServers(DNS_SERVERS);
+}
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB = process.env.MONGODB_DB || "pathora";

@@ -1335,8 +1335,11 @@ export function questionsForStream(stream: Stream | ""): StreamQuestion[] {
 export function summariseStreamQuiz(
   stream: Stream | "",
   answers: Record<string, string>,
+  // The bank the student actually sat. Defaults to the bundled one; a
+  // database-backed round must be marked against its own correct answers.
+  bank?: StreamQuestion[],
 ): StreamQuizResult {
-  const questions = questionsForStream(stream);
+  const questions = bank ?? questionsForStream(stream);
   const correctCount = questions.reduce(
     (total, question) => total + (answers[question.id] === question.correctId ? 1 : 0),
     0,

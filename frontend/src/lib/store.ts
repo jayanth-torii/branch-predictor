@@ -3,9 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  buildSeedData,
   submissionFromResult,
-  batchStats,
   courseDemand,
   interestDistribution,
 } from "./batches";
@@ -13,9 +11,24 @@ import { QUESTIONS } from "./questions";
 import { summariseStreamQuiz } from "./stream-questions";
 import { apiErrorMessage, createSubmission } from "./api";
 import { buildResult } from "./scoring";
-import type { AdminData, AssessmentResult, Batch, Student, Submission } from "./types";
+import type {
+  AdminData,
+  AssessmentResult,
+  Batch,
+  Question,
+  Student,
+  StreamQuestion,
+  Submission,
+} from "./types";
 
 const QUESTION_XP = 100;
+
+/**
+ * The dashboard starts empty and fills from the API. `seeded: false` says the
+ * rows are real, so the UI can tell "nobody has finished yet" apart from
+ * "the server has not answered yet".
+ */
+const EMPTY_ADMIN: AdminData = { batches: [], submissions: [], seeded: false };
 
 type PathoraState = {
   student: Student;
@@ -32,6 +45,15 @@ type PathoraState = {
   adminHydrated: boolean;
   adminSyncError: string | null;
   apiBase: string | null;
+  /**
+   * The question banks the student is actually sitting, when they came from
+   * the database. Null means the bundled banks are in play. Held here so
+   * `finishAssessment` can score against what was SHOWN rather than whatever
+   * the bundle contains — once staff can edit weights, those two can differ.
+   */
+  activeCoreBank: Question[] | null;
+  activeStreamBank: StreamQuestion[] | null;
+  setQuestionBanks: (core: Question[] | null, stream: StreamQuestion[] | null) => void;
   setStudent: (patch: Partial<Student>) => void;
   joinBatch: (code: string) => void;
   attachResultToBatch: (code: string) => void;
@@ -77,10 +99,18 @@ export const usePathora = create<PathoraState>()(
       streamIndex: 0,
       result: null,
       lastFeedback: null,
-      admin: buildSeedData(),
+      // Empty on purpose. This used to be `buildSeedData()`, which fabricated
+      // 18 students so the dashboard looked populated before anyone had used
+      // the product. An educator could not tell those rows from real ones.
+      admin: EMPTY_ADMIN,
       adminHydrated: false,
       adminSyncError: null,
       apiBase: null,
+      activeCoreBank: null,
+      activeStreamBank: null,
+
+      setQuestionBanks: (core, stream) =>
+        set(() => ({ activeCoreBank: core, activeStreamBank: stream })),
 
       setStudent: (patch) => set((state) => ({ student: { ...state.student, ...patch } })),
 
@@ -93,7 +123,13 @@ export const usePathora = create<PathoraState>()(
         const { student, result } = get();
         const normalized = code.trim().toUpperCase();
         if (!result || !normalized) return;
-        const submission = submissionFromResult(result, normalized);
+        const { activeCoreBank, activeStreamBank } = get();
+        const submission = submissionFromResult(
+          result,
+          normalized,
+          activeCoreBank ?? QUESTIONS,
+          activeStreamBank ?? undefined,
+        );
         set({
           student: { ...student, batchCode: normalized },
           admin: {
@@ -156,14 +192,20 @@ export const usePathora = create<PathoraState>()(
         })),
 
       finishAssessment: () => {
-        const { student, answers, xp, apiBase, streamAnswers } = get();
+        const { student, answers, xp, apiBase, streamAnswers, activeCoreBank, activeStreamBank } =
+          get();
         // Stage 2 is attached to the result for display only. It is computed
         // AFTER buildResult so it cannot reach the profile or the ranking.
         const result = {
-          ...buildResult(student, answers, xp),
-          streamQuiz: summariseStreamQuiz(student.stream, streamAnswers),
+          ...buildResult(student, answers, xp, activeCoreBank ?? QUESTIONS),
+          streamQuiz: summariseStreamQuiz(student.stream, streamAnswers, activeStreamBank ?? undefined),
         };
-        const submission = submissionFromResult(result, student.batchCode ?? "");
+        const submission = submissionFromResult(
+          result,
+          student.batchCode ?? "",
+          activeCoreBank ?? QUESTIONS,
+          activeStreamBank ?? undefined,
+        );
         const isSampleOnly = !student.batchCode;
         set((state) => ({
           result,
@@ -178,9 +220,13 @@ export const usePathora = create<PathoraState>()(
               },
         }));
 
-        if (apiBase && !isSampleOnly) {
+        // Sent for every student, batch or no batch. `isSampleOnly` still
+        // governs the LOCAL admin cache above, but it must not govern
+        // persistence: a student who never used a join code is still a
+        // student, and the dashboard is meant to hold all of them.
+        if (apiBase) {
           syncSubmissionToBackend(apiBase, submission).catch(() => {
-            /* best-effort: the local result and admin cache are already correct */
+            /* best-effort: the local result is already correct */
           });
         }
 
@@ -220,7 +266,12 @@ export const usePathora = create<PathoraState>()(
         })),
 
       setAdminData: (batches, submissions) =>
-        set(() => ({ admin: { batches, submissions, seeded: true }, adminHydrated: true, adminSyncError: null })),
+        // `seeded: false` — these rows came from the API, so they are real.
+        set(() => ({
+          admin: { batches, submissions, seeded: false },
+          adminHydrated: true,
+          adminSyncError: null,
+        })),
 
       setAdminHydrated: (value) => set(() => ({ adminHydrated: value })),
 
@@ -230,7 +281,27 @@ export const usePathora = create<PathoraState>()(
     }),
     {
       name: "pathora-ai-v1",
-      version: 1,
+      version: 2,
+      /**
+       * v1 shipped 18 fabricated students inside every browser's localStorage.
+       * Bumping the version without this would make zustand DISCARD the whole
+       * persisted blob, taking each student's real profile, answers and XP
+       * with it. So: keep everything, drop only the fake rows.
+       */
+      migrate: (persisted, version) => {
+        const state = (persisted ?? {}) as Partial<PathoraState>;
+        if (version >= 2) return state;
+        return {
+          ...state,
+          admin: {
+            batches: state.admin?.batches ?? [],
+            // Seeded submissions are flagged `sample`. Anything a real student
+            // produced locally is kept.
+            submissions: (state.admin?.submissions ?? []).filter((s) => !s.sample),
+            seeded: false,
+          },
+        };
+      },
     },
   ),
 );

@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { apiBaseUrl } from "@/lib/api-base";
 import { usePathname } from "next/navigation";
-import { BarChart3, GraduationCap, LayoutDashboard, Lock, LogOut, Users } from "lucide-react";
+import {
+  BarChart3,
+  FileQuestion,
+  GraduationCap,
+  LayoutDashboard,
+  Lock,
+  LogOut,
+  Users,
+} from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { useHydrated } from "@/lib/client-hooks";
 import { SiteFooter } from "@/components/site-footer";
@@ -22,6 +30,7 @@ const TABS = [
   { href: "/admin/batches", label: "Batches", icon: GraduationCap },
   { href: "/admin/students", label: "Students", icon: Users },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/questions", label: "Questions", icon: FileQuestion },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

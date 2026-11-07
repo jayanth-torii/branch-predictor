@@ -52,3 +52,14 @@ export const SAMPLE_BATCHES = [
     sample: true,
   },
 ] as const;
+
+/**
+ * The icon names a stage-1 option may use. Each maps to a component in the
+ * frontend, so an admin edit must be constrained to this list — an unknown
+ * name would render nothing at all on the assessment screen.
+ */
+export const OPTION_ICONS = [
+  "code", "palette", "wrench", "rocket", "users", "sigma",
+  "compass", "blocks", "chart", "pen", "cpu", "briefcase",
+] as const;
+export type OptionIcon = (typeof OPTION_ICONS)[number];

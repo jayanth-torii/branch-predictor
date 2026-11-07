@@ -58,8 +58,8 @@ submissionsRouter.get("/", async (req, res) => {
     const submissions = await SubmissionModel.find(query).sort({ createdAt: -1 }).lean();
 
     return res.json({ submissions: (submissions ?? []).map(sanitizeSubmission) });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });
 
@@ -88,16 +88,21 @@ submissionsRouter.post("/", async (req, res) => {
       return badRequest(res, parsed.error.issues[0]?.message ?? "Invalid submission data.");
     }
 
+    // A student who never joined a batch still gets stored; there is just no
+    // batch to validate against. Only a non-empty code is checked for
+    // existence and capacity.
     const code = parsed.data.batchCode;
-    const batch = await BatchModel.findOne({ code }).lean();
-    if (!batch) {
-      return badRequest(res, `No batch found for code ${code}.`);
-    }
-    if (
-      batch.capacity > 0 &&
-      (await SubmissionModel.countDocuments({ batchCode: code })) >= batch.capacity
-    ) {
-      return badRequest(res, `The batch ${code} has reached its capacity of ${batch.capacity}.`);
+    if (code) {
+      const batch = await BatchModel.findOne({ code }).lean();
+      if (!batch) {
+        return badRequest(res, `No batch found for code ${code}.`);
+      }
+      if (
+        batch.capacity > 0 &&
+        (await SubmissionModel.countDocuments({ batchCode: code })) >= batch.capacity
+      ) {
+        return badRequest(res, `The batch ${code} has reached its capacity of ${batch.capacity}.`);
+      }
     }
 
     // Only a submission that got past validation counts against the window,
@@ -112,10 +117,17 @@ submissionsRouter.post("/", async (req, res) => {
 
     // Upsert, case-insensitively on id: a student who re-syncs the same local
     // result updates their row instead of creating a duplicate.
+    //
+    // `id` MUST be in the $set. The filter matches on a RegExp, and MongoDB
+    // cannot derive a field value from a regex when the upsert inserts — so
+    // without this every inserted row stored `id: null`, and the second
+    // submission ever made died on the unique index with E11000. Ids are
+    // already lowercase by schema, so storing the value as given is exact.
     const created = await SubmissionModel.findOneAndUpdate(
       { id: new RegExp(`^${parsed.data.id}$`, "i") },
       {
         $set: {
+          id: parsed.data.id,
           name: parsed.data.name,
           stream: parsed.data.stream,
           puYear: parsed.data.puYear,
@@ -130,6 +142,10 @@ submissionsRouter.post("/", async (req, res) => {
           eligibleCourses: parsed.data.eligibleCourses,
           interestedCareers: parsed.data.interestedCareers,
           sample: false,
+          // The full record: answers, the whole ranked match list with its
+          // reasoning, the stream round and the onboarding fields. Validating
+          // it without writing it here would have stored nothing.
+          ...(parsed.data.detail ? { detail: parsed.data.detail } : {}),
         },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true },
@@ -138,8 +154,8 @@ submissionsRouter.post("/", async (req, res) => {
     return res.status(201).json({
       submission: created ? sanitizeSubmission(created) : null,
     });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });
 
@@ -166,7 +182,7 @@ submissionsRouter.delete("/", async (req, res) => {
       return notFound(res);
     }
     return res.json({ deleted: true });
-  } catch {
-    return dbError(res);
+  } catch (error) {
+    return dbError(res, error);
   }
 });

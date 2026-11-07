@@ -1,3 +1,5 @@
+import type { SubmissionDetail } from "@/lib/types";
+
 export type ApiError = { error: string; fields?: Record<string, string>; status?: number };
 
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
@@ -135,6 +137,8 @@ export type SubmissionPayload = {
   eligibleCourses: string[];
   interestedCareers: string[];
   sample?: boolean;
+  /** The full record — answers, ranked matches, stream round, onboarding. */
+  detail?: SubmissionDetail;
 };
 export type SubmissionsResponse = { submissions?: SubmissionPayload[]; error?: string };
 
@@ -145,4 +149,51 @@ export async function fetchSubmissions(base: string | null, batchCode?: string):
 
 export async function createSubmission(base: string | null, submission: SubmissionPayload): Promise<{ submission?: SubmissionPayload; error?: string }> {
   return adminFetch(base, "/api/submissions", { method: "POST", body: JSON.stringify(submission) }) as Promise<{ submission?: SubmissionPayload; error?: string }>;
+}
+
+/* ── Question bank ──────────────────────────────────────────────────────── */
+
+export type QuestionBankResponse = {
+  core?: unknown[];
+  stream?: Record<string, unknown[]>;
+  counts?: { core: number; stream: number };
+  error?: string;
+};
+
+/** Public: the assessment needs this before a student has logged into anything. */
+export async function fetchQuestionBank(base: string | null): Promise<QuestionBankResponse> {
+  if (!base) return Promise.reject(new Error("Backend not configured"));
+  return apiFetch<QuestionBankResponse>(new URL("/api/questions", base).href);
+}
+
+export async function importQuestionBank(
+  base: string | null,
+  payload: { core: unknown[]; stream: unknown[]; replace?: boolean },
+): Promise<unknown> {
+  return adminFetch(base, "/api/questions/import", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCoreQuestion(
+  base: string | null,
+  id: string,
+  patch: unknown,
+): Promise<unknown> {
+  return adminFetch(base, `/api/questions/core/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function updateStreamQuestion(
+  base: string | null,
+  id: string,
+  patch: unknown,
+): Promise<unknown> {
+  return adminFetch(base, `/api/questions/stream/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
 }

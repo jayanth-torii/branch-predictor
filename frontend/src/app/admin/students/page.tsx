@@ -2,12 +2,13 @@
 
 import { ChevronDown, Download, Loader2, Search, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
+import { StudentDetail } from "@/components/admin/student-detail";
 import { courseDemand } from "@/lib/batches";
 import { CAREER_BY_SLUG } from "@/lib/careers";
 import { COURSE_BY_SLUG } from "@/lib/courses";
 import { usePathora } from "@/lib/store";
 import { DIMENSION_META, STREAMS, type Submission } from "@/lib/types";
-import { downloadCsv, formatDate } from "@/lib/utils";
+import { cn, downloadCsv, formatDate } from "@/lib/utils";
 
 export default function AdminStudentsPage() {
   const admin = usePathora((state) => state.admin);
@@ -17,6 +18,7 @@ export default function AdminStudentsPage() {
   const [undecidedOnly, setUndecidedOnly] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [pdfFor, setPdfFor] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -308,10 +310,41 @@ export default function AdminStudentsPage() {
                                 ))}
                               </div>
                               <p className="mt-2 text-[0.58rem] leading-relaxed text-slate-ink">
-                                Question-level answers are intentionally not shown. Use this summary for
-                                a conversation, not a diagnosis.
+                                Use this summary for a conversation, not a diagnosis.
                               </p>
                             </div>
+                          </div>
+
+                          {/* Answer-level detail sits behind a second, explicit
+                              toggle. The summary above answers most questions;
+                              opening a student's individual answers should be a
+                              deliberate act, not something a staff member lands
+                              on by expanding a row. */}
+                          <div className="mt-4 border-t border-midnight/[0.07] pt-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDetailId(detailId === submission.id ? null : submission.id)
+                              }
+                              aria-expanded={detailId === submission.id}
+                              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-midnight/10 bg-surface px-3 py-1.5 text-[0.64rem] font-bold text-midnight transition hover:border-orange hover:text-orange md:min-h-0"
+                            >
+                              {detailId === submission.id
+                                ? "Hide full answers"
+                                : "View full answers and ranking"}
+                              <ChevronDown
+                                aria-hidden="true"
+                                className={cn(
+                                  "size-3 transition-transform",
+                                  detailId === submission.id && "rotate-180",
+                                )}
+                              />
+                            </button>
+                            {detailId === submission.id && (
+                              <div className="mt-3">
+                                <StudentDetail submission={submission} />
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>

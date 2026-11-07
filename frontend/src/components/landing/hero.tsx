@@ -121,33 +121,41 @@ export function Hero({ courseCount }: { courseCount: number }) {
               feels like{" "}
               <span className="relative inline-block text-orange">
                 YOU
-                {/* Hand-drawn underline + spark ticks, as in the reference. */}
+                {/*
+                  Hand-drawn underline + spark ticks.
+
+                  Every offset here is in `em`, never rem or a fixed Tailwind
+                  step, because the headline scales 2.7rem -> 4.1rem across
+                  breakpoints. The previous version used -bottom-2 / -right-5 /
+                  -top-2, so the decoration only lined up at one size and drifted
+                  at every other one.
+
+                  The path is symmetric (both ends at y=14) so the stroke sits
+                  parallel to the baseline instead of tilting up to the right.
+                */}
                 <svg
                   aria-hidden="true"
-                  viewBox="0 0 200 26"
+                  viewBox="0 0 200 20"
                   preserveAspectRatio="none"
-                  className="absolute -bottom-2 left-0 h-[0.3em] w-full overflow-visible"
+                  className="pointer-events-none absolute left-0 top-[0.92em] h-[0.16em] w-full overflow-visible"
                 >
                   <path
-                    d="M4 17 C 46 4, 128 4, 193 12"
+                    d="M6 14 Q 100 3 194 14"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="6"
+                    strokeWidth="7"
                     strokeLinecap="round"
                   />
                 </svg>
+                {/* Two ticks off the top-right corner, angled apart like a spark. */}
                 <span
                   aria-hidden="true"
-                  className="absolute -right-5 -top-2 text-[0.3em] leading-none text-orange"
-                >
-                  <span className="block h-[1.4em] w-[0.22em] -rotate-12 rounded-full bg-current" />
-                </span>
+                  className="pointer-events-none absolute -right-[0.26em] top-[0.02em] block h-[0.26em] w-[0.055em] -rotate-[16deg] rounded-full bg-current"
+                />
                 <span
                   aria-hidden="true"
-                  className="absolute -right-8 top-[0.9em] text-[0.3em] leading-none text-orange"
-                >
-                  <span className="block h-[1.1em] w-[0.22em] rotate-[32deg] rounded-full bg-current" />
-                </span>
+                  className="pointer-events-none absolute -right-[0.40em] top-[0.34em] block h-[0.2em] w-[0.055em] rotate-[24deg] rounded-full bg-current"
+                />
               </span>
             </span>
           </h1>

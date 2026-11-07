@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Lightbulb, Sparkles, Target, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EmojiBurst, EmojiPath } from "@/components/assessment/emoji-path";
 import { Logo } from "@/components/logo";
 import { ProgressBar } from "@/components/ui";
 import { useHydrated } from "@/lib/client-hooks";
-import { questionsForStream } from "@/lib/stream-questions";
+import { useQuestionBank } from "@/lib/question-source";
 import { usePathora } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,21 @@ export default function StreamQuizPage() {
   const nextStreamQuestion = usePathora((state) => state.nextStreamQuestion);
   const finishAssessment = usePathora((state) => state.finishAssessment);
 
-  const questions = questionsForStream(student.stream);
+  const bank = useQuestionBank();
+  // Memoised: a fresh array every render would re-fire the effect below.
+  const questions = useMemo(
+    () => (student.stream ? (bank.stream[student.stream] ?? []) : []),
+    [bank.stream, student.stream],
+  );
+  const setQuestionBanks = usePathora((state) => state.setQuestionBanks);
+  useEffect(() => {
+    // Stage 2 is marked against its own correctId, so the bank the student sat
+    // has to reach the store before they finish.
+    setQuestionBanks(
+      bank.source === "server" ? bank.core : null,
+      bank.source === "server" ? questions : null,
+    );
+  }, [bank.source, bank.core, questions, setQuestionBanks]);
   const question = questions[streamIndex];
   const chosenId = question ? streamAnswers[question.id] : undefined;
   const answered = Boolean(chosenId);

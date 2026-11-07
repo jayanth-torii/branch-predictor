@@ -14,6 +14,7 @@ import {
   type InterestProfile,
   type MarksBand,
   type MatchLabel,
+  type Question,
   type QuestionOption,
   type Student,
 } from "./types";
@@ -38,9 +39,20 @@ export const EMPTY_PROFILE: InterestProfile = {
 
 const FINAL_QUESTION_MULTIPLIER = 1.6;
 
-function maxRawByDimension(): InterestProfile {
+/**
+ * The ceiling each dimension can reach, used to normalise raw weights to 0-100.
+ *
+ * It depends on the bank in play: once an admin edits an option's weights, the
+ * maximum changes with it. Memoised by bank identity so the common case (the
+ * bundled bank, same array every call) stays a single computation.
+ */
+const maxRawCache = new WeakMap<Question[], InterestProfile>();
+
+function maxRawByDimension(bank: Question[]): InterestProfile {
+  const cached = maxRawCache.get(bank);
+  if (cached) return cached;
   const totals = { ...EMPTY_PROFILE };
-  for (const question of QUESTIONS) {
+  for (const question of bank) {
     const multiplier = question.number === 10 ? FINAL_QUESTION_MULTIPLIER : 1;
     const best = { ...EMPTY_PROFILE };
     for (const option of question.options) {
@@ -52,19 +64,26 @@ function maxRawByDimension(): InterestProfile {
       totals[dimension] += best[dimension] * multiplier;
     }
   }
+  maxRawCache.set(bank, totals);
   return totals;
 }
 
-const MAX_RAW = maxRawByDimension();
-
-export function findOption(questionId: string, optionId: string): QuestionOption | undefined {
-  return QUESTIONS.find((q) => q.id === questionId)?.options.find((o) => o.id === optionId);
+export function findOption(
+  questionId: string,
+  optionId: string,
+  bank: Question[] = QUESTIONS,
+): QuestionOption | undefined {
+  return bank.find((q) => q.id === questionId)?.options.find((o) => o.id === optionId);
 }
 
-export function computeInterestProfile(answers: Record<string, string>): InterestProfile {
+export function computeInterestProfile(
+  answers: Record<string, string>,
+  bank: Question[] = QUESTIONS,
+): InterestProfile {
+  const MAX_RAW = maxRawByDimension(bank);
   const raw = { ...EMPTY_PROFILE };
-  for (const question of QUESTIONS) {
-    const option = findOption(question.id, answers[question.id] ?? "");
+  for (const question of bank) {
+    const option = findOption(question.id, answers[question.id] ?? "", bank);
     if (!option) continue;
     const multiplier = question.number === 10 ? FINAL_QUESTION_MULTIPLIER : 1;
     for (const dimension of DIMENSIONS) {
@@ -259,6 +278,7 @@ function scoreCourse(
   course: Course,
   profile: InterestProfile,
   answers: Record<string, string>,
+  bank: Question[] = QUESTIONS,
 ): { interestScore: number; aspirationBonus: number; reasons: CourseMatch["dimensionReasons"] } {
   let numerator = 0;
   let denominator = 0;
@@ -270,7 +290,7 @@ function scoreCourse(
   }
   const interestScore = denominator === 0 ? 0 : numerator / denominator;
 
-  const q10Option = findOption("q10", answers.q10 ?? "");
+  const q10Option = findOption("q10", answers.q10 ?? "", bank);
   let aspirationBonus = 0;
   const aspiration = aspirationDimension(answers);
   if (q10Option?.preference?.includes(course.slug)) {
@@ -355,9 +375,10 @@ export function matchCourses(
   answers: Record<string, string>,
   stream: string,
   marksBand: MarksBand | "" = "",
+  bank: Question[] = QUESTIONS,
 ): CourseMatch[] {
   const scored = COURSES.map((course) => {
-    const { interestScore, aspirationBonus, reasons } = scoreCourse(course, profile, answers);
+    const { interestScore, aspirationBonus, reasons } = scoreCourse(course, profile, answers, bank);
     return {
       course,
       interestScore: Math.round(interestScore),
@@ -431,11 +452,16 @@ export function buildResult(
   student: Student,
   answers: Record<string, string>,
   xp: number,
+  // The bank the student actually answered. Defaults to the bundled one, so
+  // every existing caller is unchanged — but once questions are edited in the
+  // database, a student must be scored against the weights they were shown,
+  // not whatever the bundle happens to contain.
+  bank: Question[] = QUESTIONS,
 ): AssessmentResult {
-  const completedCount = QUESTIONS.filter((q) => answers[q.id]).length;
-  const profile = computeInterestProfile(answers);
+  const completedCount = bank.filter((q) => answers[q.id]).length;
+  const profile = computeInterestProfile(answers, bank);
   const archetype = pickArchetype(profile, completedCount);
-  const matches = matchCourses(profile, answers, student.stream, student.marksBand);
+  const matches = matchCourses(profile, answers, student.stream, student.marksBand, bank);
   const topDimensions = sortedDimensions(profile).slice(0, 3);
   const learningStyle =
     LEARNING_STYLES[answers.q5 ?? ""] ?? "Exploratory learner — still finding the format that fits";

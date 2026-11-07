@@ -11,7 +11,14 @@ import type { Response } from "express";
  * `{ error, fields? }` and would break if the envelope moved.
  */
 
-export function dbError(res: Response) {
+/**
+ * The client gets a fixed message; the server gets the cause.
+ *
+ * This used to discard the error entirely, so a 503 left nothing in the log
+ * and every database fault looked identical from the outside.
+ */
+export function dbError(res: Response, error?: unknown) {
+  if (error) console.error("[pathora] db error:", error);
   return res
     .status(503)
     .json({ error: "Database temporarily unavailable. Please try again in a moment." });

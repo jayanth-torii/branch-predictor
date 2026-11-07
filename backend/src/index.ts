@@ -3,9 +3,12 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
+import { connectDb } from "./lib/db.js";
+import { dbError } from "./lib/http.js";
 import { adminRouter } from "./routes/admin.js";
 import { batchesRouter } from "./routes/batches.js";
 import { mentorRouter } from "./routes/mentor.js";
+import { questionsRouter } from "./routes/questions.js";
 import { submissionsRouter } from "./routes/submissions.js";
 
 const app = express();
@@ -48,9 +51,29 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+/**
+ * Opens the database connection before any handler that queries it.
+ *
+ * `connectDb()` was previously reached from a single place — `ensureSeeded()`
+ * inside GET /api/submissions. Every other database route queried an
+ * unconnected Mongoose, which buffers the operation and then times out, so a
+ * perfectly healthy database still answered 503. Doing it as middleware means
+ * a new route cannot forget it.
+ *
+ * Admin sessions and the mentor route are deliberately NOT behind this: the
+ * passcode check must keep working when the database is down, and an unrelated
+ * outage must not take the AI wording layer with it.
+ */
+const withDb: express.RequestHandler = (_req, res, next) => {
+  connectDb()
+    .then(() => next())
+    .catch((error) => dbError(res, error));
+};
+
 app.use("/api/admin", adminRouter);
-app.use("/api/batches", batchesRouter);
-app.use("/api/submissions", submissionsRouter);
+app.use("/api/batches", withDb, batchesRouter);
+app.use("/api/submissions", withDb, submissionsRouter);
+app.use("/api/questions", withDb, questionsRouter);
 app.use("/api/mentor", mentorRouter);
 
 app.use((_req, res) => {

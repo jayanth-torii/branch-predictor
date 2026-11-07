@@ -1,14 +1,18 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
   Brain,
+  ChevronDown,
   Compass,
   Download,
+  Flame,
   GraduationCap,
+  Info,
   Sparkles,
   Target,
   Zap,
@@ -24,7 +28,7 @@ import { useHydrated } from "@/lib/client-hooks";
 import { SiteFooter } from "@/components/site-footer";
 import { usePathora } from "@/lib/store";
 import { DIMENSION_META } from "@/lib/types";
-import { downloadCsv, formatDate } from "@/lib/utils";
+import { cn, downloadCsv, formatDate } from "@/lib/utils";
 
 export default function ResultsPage() {
   const mounted = useHydrated();
@@ -319,25 +323,74 @@ export default function ResultsPage() {
       <section className="border-y border-midnight/[0.06] bg-surface">
         <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
           <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-5">
-              <SectionHeading
-                eyebrow="Course discovery"
-                title="Courses that line up with how you think."
-                description={`Ranked by interest overlap and filtered by ${result.student.stream || "your"} stream eligibility. Explanations are generated from your actual dimension scores — not from a language model.`}
-              />
-              <Link href="/courses" className="btn btn-ghost shrink-0">
-                Full catalog
-                <ArrowUpRight className="size-4" aria-hidden="true" />
-              </Link>
+            <div className="grid items-center gap-8 lg:grid-cols-[1.25fr_0.75fr]">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-orange/35 bg-peach px-3.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-orange">
+                  <Compass className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+                  Course discovery
+                </span>
+                <h2 className="display mt-4 text-[1.9rem] leading-[1.08] text-balance text-midnight sm:text-[2.5rem]">
+                  Courses that line up with how{" "}
+                  <span className="relative inline-block whitespace-nowrap text-orange">
+                    you think.
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 200 20"
+                      preserveAspectRatio="none"
+                      className="pointer-events-none absolute left-0 top-[0.95em] h-[0.14em] w-full overflow-visible"
+                    >
+                      <path
+                        d="M5 13 Q 100 3 195 13"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="7"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                </h2>
+                <p className="mt-4 max-w-xl text-[0.92rem] leading-relaxed text-slate-ink">
+                  Ranked by interest overlap and filtered by{" "}
+                  {result.student.stream || "your"} stream eligibility. Explanations are generated
+                  from your actual dimension scores — not from a language model.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center gap-4">
+                <Image
+                  src="/courses-illustration.png"
+                  alt=""
+                  width={1410}
+                  height={838}
+                  sizes="(max-width: 1023px) 70vw, 32vw"
+                  className="h-auto w-full max-w-[22rem]"
+                />
+                <Link
+                  href="/courses"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--color-navy)] px-6 text-[0.88rem] font-bold text-white transition hover:bg-[var(--color-navy)]/90"
+                >
+                  Full catalog
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
+                </Link>
+              </div>
             </div>
           </Reveal>
 
           {strong.length > 0 && (
             <div className="mt-10">
-              <h3 className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-orange">
-                Strong match
-              </h3>
-              <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="grid size-8 shrink-0 place-items-center rounded-full bg-peach text-orange"
+                >
+                  <Flame className="size-4" strokeWidth={2.4} />
+                </span>
+                <h3 className="text-[0.82rem] font-bold uppercase tracking-[0.16em] text-midnight">
+                  Strong match
+                </h3>
+                <span aria-hidden="true" className="h-0.5 w-16 rounded-full bg-orange" />
+              </div>
+              <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {strong.map((match) => (
                   <CourseCard key={match.course.slug} match={match} featured />
                 ))}
@@ -347,10 +400,19 @@ export default function ResultsPage() {
 
           {further.length > 0 && (
             <div className="mt-10">
-              <h3 className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-indigo">
-                Explore further
-              </h3>
-              <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="grid size-8 shrink-0 place-items-center rounded-full bg-peach text-orange"
+                >
+                  <Compass className="size-4" strokeWidth={2.4} />
+                </span>
+                <h3 className="text-[0.82rem] font-bold uppercase tracking-[0.16em] text-midnight">
+                  Explore further
+                </h3>
+                <span aria-hidden="true" className="h-0.5 w-16 rounded-full bg-orange" />
+              </div>
+              <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {further.map((match) => (
                   <CourseCard key={match.course.slug} match={match} />
                 ))}
@@ -358,15 +420,23 @@ export default function ResultsPage() {
             </div>
           )}
 
-          <div className="mt-8 flex flex-wrap items-center gap-4">
+          {/* The qualifier sits beside the controls, not buried under the
+              grid: a student reading "Strong match" needs to know in the same
+              glance that it is relative to their own answers. */}
+          <div className="mt-9 flex flex-col gap-5 border-t border-midnight/[0.07] pt-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+            <div className="flex flex-wrap items-center gap-4">
             {alternatives.length > 0 && (
               <button
                 type="button"
                 onClick={() => setShowAlternatives((value) => !value)}
-                className="btn btn-ghost !py-2.5 !text-xs"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-midnight/12 bg-surface px-5 text-[0.85rem] font-bold text-midnight transition hover:border-orange/50 hover:text-orange"
                 aria-expanded={showAlternatives}
               >
                 {showAlternatives ? "Hide alternative paths" : `Show ${alternatives.length} alternative paths`}
+                <ChevronDown
+                  aria-hidden="true"
+                  className={cn("size-4 transition-transform", showAlternatives && "rotate-180")}
+                />
               </button>
             )}
             {ineligible.length > 0 && (
@@ -381,6 +451,14 @@ export default function ResultsPage() {
                   : `Show ${ineligible.length} courses that may require other subjects`}
               </button>
             )}
+            </div>
+
+            <p className="flex max-w-xl items-start gap-2.5 text-[0.76rem] leading-relaxed text-slate-ink">
+              <Info className="mt-0.5 size-4 shrink-0 text-slate-ink/70" aria-hidden="true" />
+              Labels are relative to your own results and stream, not an absolute judgement of
+              course quality. Admission cut-offs, entrance exams and subject combinations vary by
+              institution and year.
+            </p>
           </div>
 
           {showAlternatives && alternatives.length > 0 && (

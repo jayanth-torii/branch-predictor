@@ -283,6 +283,84 @@ export type AssessmentResult = {
   batchCode?: string;
 };
 
+/**
+ * What a student actually saw and chose, captured at answer time.
+ *
+ * Ids alone are not enough once staff can edit the bank: `q1 -> "A"` renders
+ * with whatever option A says TODAY, which may be nothing like the text the
+ * student picked. Storing the words alongside the ids means a historical
+ * answer can never be misrepresented by a later edit.
+ */
+export type AnsweredQuestion = {
+  questionId: string;
+  questionTitle: string;
+  optionId: string;
+  optionLabel: string;
+  optionDetail: string;
+};
+
+export type AnsweredStreamQuestion = {
+  questionId: string;
+  subject: string;
+  questionTitle: string;
+  optionId: string;
+  optionLabel: string;
+  correctId: string;
+  correctLabel: string;
+  correct: boolean;
+};
+
+/**
+ * Everything the flat summary above throws away.
+ *
+ * The summary fields exist because the dashboard, the analytics charts and the
+ * PDF export all read them directly, and they must stay cheap to query. This
+ * carries the rest — the actual answers, the full ranked match list with its
+ * reasoning, the stream round, and the onboarding fields — so a stored
+ * submission is a complete record of what the student did and what the engine
+ * told them, not a digest of it.
+ */
+export type SubmissionDetail = {
+  /** Onboarding answers the summary drops entirely. */
+  areaOfInterest: string;
+  marksBand: string;
+  language: string;
+  completedCount: number;
+  archetypeKey: string;
+  learningStyle: string;
+  perspective: string;
+  goal: string;
+  badges: string[];
+  /** Dimensions in rank order, not just the top one. */
+  topDimensions: Dimension[];
+  /** Stage 1, exactly as answered: question id -> option id. */
+  answers: Record<string, string>;
+  /** The same answers with the wording they were shown in. */
+  answerDetail: AnsweredQuestion[];
+  /** Stage 2. Absent when the student stopped before the stream round. */
+  streamQuiz?: {
+    answers: Record<string, string>;
+    answerDetail: AnsweredStreamQuestion[];
+    correctCount: number;
+    total: number;
+  };
+  /** Every ranked course the engine produced, with the reasoning behind it. */
+  matches: {
+    slug: string;
+    name: string;
+    label: MatchLabel;
+    interestScore: number;
+    aspirationBonus: number;
+    finalScore: number;
+    eligible: boolean;
+    marksFit: boolean;
+    marksNote: string;
+    explanation: string;
+    dimensionReasons: { dimension: Dimension; strength: number; courseNeed: number }[];
+  }[];
+  topCareers: { slug: string; title: string }[];
+};
+
 export type Submission = {
   id: string;
   name: string;
@@ -299,6 +377,8 @@ export type Submission = {
   sample?: boolean;
   eligibleCourses: string[];
   interestedCareers: string[];
+  /** Optional so submissions stored before this existed still load. */
+  detail?: SubmissionDetail;
 };
 
 export type Batch = {

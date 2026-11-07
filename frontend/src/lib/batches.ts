@@ -1,14 +1,15 @@
 import { CAREER_BY_SLUG } from "@/lib/careers";
-import { COURSE_BY_SLUG } from "@/lib/courses";
 import { QUESTIONS } from "@/lib/questions";
-import { buildResult, sortedDimensions } from "@/lib/scoring";
+import { questionsForStream } from "@/lib/stream-questions";
+import { COURSE_BY_SLUG } from "@/lib/courses";
+import { sortedDimensions } from "@/lib/scoring";
 import type {
-  AdminData,
   AssessmentResult,
   Batch,
   Dimension,
   InterestProfile,
-  Stream,
+  Question,
+  StreamQuestion,
   Submission,
 } from "@/lib/types";
 import { DIMENSIONS } from "@/lib/types";
@@ -43,111 +44,14 @@ export const SAMPLE_BATCHES: Batch[] = [
   },
 ];
 
-type SeedStudent = {
-  name: string;
-  stream: Stream;
-  puYear: "1st PU" | "2nd PU";
-  focus: Dimension;
-  batchCode: string;
-  day: number;
-  undecided?: boolean;
-  skipOne?: boolean;
-};
-
-const SEED_STUDENTS: SeedStudent[] = [
-  { name: "Aarav Shetty", stream: "PCMC", puYear: "2nd PU", focus: "technology", batchCode: "PTH-2027", day: 12 },
-  { name: "Meera Nair", stream: "PCMB", puYear: "2nd PU", focus: "creativity", batchCode: "PTH-2027", day: 11 },
-  { name: "Rohan Kulkarni", stream: "PCM", puYear: "1st PU", focus: "engineering", batchCode: "PTH-2027", day: 11 },
-  { name: "Sana Fatima", stream: "Commerce", puYear: "2nd PU", focus: "business", batchCode: "PTH-C27", day: 10 },
-  { name: "Aditi Rao", stream: "PCMB", puYear: "2nd PU", focus: "communication", batchCode: "PTH-2027", day: 9 },
-  { name: "Karthik Menon", stream: "PCMC", puYear: "1st PU", focus: "analytical", batchCode: "PTH-2027", day: 9 },
-  { name: "Ishita Jain", stream: "Commerce", puYear: "2nd PU", focus: "business", batchCode: "PTH-C27", day: 8 },
-  { name: "Nikhil Gowda", stream: "PCM", puYear: "2nd PU", focus: "technology", batchCode: "PTH-2026", day: 8 },
-  { name: "Ananya Bhat", stream: "Arts/Humanities", puYear: "2nd PU", focus: "communication", batchCode: "PTH-2026", day: 7 },
-  { name: "Yash Patel", stream: "PCMC", puYear: "1st PU", focus: "engineering", batchCode: "PTH-2027", day: 6 },
-  { name: "Diya Sharma", stream: "PCMB", puYear: "2nd PU", focus: "creativity", batchCode: "PTH-2026", day: 5, undecided: true },
-  { name: "Arjun Hegde", stream: "PCM", puYear: "2nd PU", focus: "analytical", batchCode: "PTH-2026", day: 5 },
-  { name: "Riya D'Souza", stream: "Commerce", puYear: "1st PU", focus: "business", batchCode: "PTH-C27", day: 4 },
-  { name: "Vihaan Reddy", stream: "PCMC", puYear: "2nd PU", focus: "technology", batchCode: "PTH-2027", day: 3 },
-  { name: "Sneha Iyer", stream: "Commerce", puYear: "2nd PU", focus: "communication", batchCode: "PTH-C27", day: 3, skipOne: true },
-  { name: "Tanvi Desai", stream: "PCMB", puYear: "1st PU", focus: "analytical", batchCode: "PTH-2027", day: 2 },
-  { name: "Mohit Verma", stream: "PCM", puYear: "1st PU", focus: "engineering", batchCode: "PTH-2026", day: 2, undecided: true },
-  { name: "Lakshmi Prasad", stream: "Arts/Humanities", puYear: "2nd PU", focus: "creativity", batchCode: "PTH-2026", day: 1 },
-];
-
-function seededAnswers(focus: Dimension, salt: number, undecided = false, skipOne = false) {
-  const answers: Record<string, string> = {};
-  QUESTIONS.forEach((question, index) => {
-    if (skipOne && index === 6) return;
-    if (question.number === 10 && undecided) {
-      answers[question.id] = "G";
-      return;
-    }
-    const scored = question.options
-      .map((option) => ({
-        id: option.id,
-        weight: option.weights[focus] ?? 0,
-      }))
-      .sort((a, b) => b.weight - a.weight || a.id.localeCompare(b.id));
-    const pool = scored.slice(0, 3);
-    const choice = pool[(index + salt) % pool.length] ?? pool[0];
-    answers[question.id] = choice.id;
-  });
-  return answers;
-}
-
-function toSubmission(result: AssessmentResult, day: number): Submission {
-  const top = result.matches.find((m) => m.eligible) ?? result.matches[0];
-  const topDimension = sortedDimensions(result.profile)[0];
-  return {
-    id: result.id,
-    name: result.student.name,
-    stream: result.student.stream,
-    puYear: result.student.puYear,
-    batchCode: result.student.batchCode ?? "",
-    createdAt: new Date(Date.UTC(2026, 9, day, 10, 30)).toISOString(),
-    profile: result.profile,
-    archetype: result.archetype.title,
-    topDimension,
-    topCourseSlug: top?.course.slug ?? "",
-    xp: result.xp,
-    undecided: result.answers.q10 === "G",
-    sample: true,
-    eligibleCourses: result.matches.filter((m) => m.eligible).slice(0, 5).map((m) => m.course.slug),
-    interestedCareers: result.topCareers.map((career) => career.slug),
-  };
-}
-
-let cachedSeed: AdminData | null = null;
-
-export function buildSeedData(): AdminData {
-  if (cachedSeed) return cachedSeed;
-  const submissions = SEED_STUDENTS.map((student, index) => {
-    const answers = seededAnswers(student.focus, index % 3, student.undecided, student.skipOne);
-    const completed = Object.keys(answers).length;
-    const result = buildResult(
-      {
-        name: student.name,
-        stream: student.stream,
-        puYear: student.puYear,
-        areaOfInterest: "",
-        // Sample students carry no marks, so the marks gate stays a no-op for
-        // them and the seeded dashboards look exactly as they did before.
-        marksBand: "",
-        language: "English",
-        batchCode: student.batchCode,
-      },
-      answers,
-      completed * 100 + (completed === 10 ? 150 : 0),
-    );
-    return toSubmission(result, student.day);
-  });
-
-  cachedSeed = { batches: SAMPLE_BATCHES, submissions, seeded: true };
-  return cachedSeed;
-}
-
-export function submissionFromResult(result: AssessmentResult, batchCode: string): Submission {
+export function submissionFromResult(
+  result: AssessmentResult,
+  batchCode: string,
+  // The banks the student actually sat. Passed in rather than imported so the
+  // snapshot records the wording they were shown, even after staff edit it.
+  coreBank: Question[] = QUESTIONS,
+  streamBank?: StreamQuestion[],
+): Submission {
   const top = result.matches.find((m) => m.eligible) ?? result.matches[0];
   return {
     id: result.id,
@@ -164,6 +68,72 @@ export function submissionFromResult(result: AssessmentResult, batchCode: string
     undecided: result.answers.q10 === "G" || result.completedCount < 10,
     eligibleCourses: result.matches.filter((m) => m.eligible).slice(0, 5).map((m) => m.course.slug),
     interestedCareers: result.topCareers.map((career) => career.slug),
+    detail: {
+      areaOfInterest: result.student.areaOfInterest,
+      marksBand: result.student.marksBand,
+      language: result.student.language,
+      completedCount: result.completedCount,
+      archetypeKey: result.archetype.key,
+      learningStyle: result.learningStyle,
+      perspective: result.perspective,
+      goal: result.goal,
+      badges: result.badges,
+      topDimensions: result.topDimensions,
+      answers: result.answers,
+      answerDetail: Object.entries(result.answers).map(([questionId, optionId]) => {
+        const question = coreBank.find((q) => q.id === questionId);
+        const option = question?.options.find((o) => o.id === optionId);
+        return {
+          questionId,
+          questionTitle: question?.title ?? "",
+          optionId,
+          optionLabel: option?.label ?? "",
+          optionDetail: option?.detail ?? "",
+        };
+      }),
+      streamQuiz: result.streamQuiz
+        ? {
+            answers: result.streamQuiz.answers,
+            answerDetail: Object.entries(result.streamQuiz.answers).map(
+              ([questionId, optionId]) => {
+                const bank = streamBank ?? questionsForStream(result.student.stream);
+                const question = bank.find((q) => q.id === questionId);
+                const chosen = question?.options.find((o) => o.id === optionId);
+                const correct = question?.options.find((o) => o.id === question.correctId);
+                return {
+                  questionId,
+                  subject: question?.subject ?? "",
+                  questionTitle: question?.title ?? "",
+                  optionId,
+                  optionLabel: chosen?.label ?? "",
+                  correctId: question?.correctId ?? "",
+                  correctLabel: correct?.label ?? "",
+                  correct: Boolean(question) && optionId === question?.correctId,
+                };
+              },
+            ),
+            correctCount: result.streamQuiz.correctCount,
+            total: result.streamQuiz.total,
+          }
+        : undefined,
+      // The WHOLE ranked list, not the top five. The point of storing this is
+      // being able to reconstruct exactly what the student was shown, which a
+      // truncated list cannot do.
+      matches: result.matches.map((m) => ({
+        slug: m.course.slug,
+        name: m.course.name,
+        label: m.label,
+        interestScore: m.interestScore,
+        aspirationBonus: m.aspirationBonus,
+        finalScore: m.finalScore,
+        eligible: m.eligible,
+        marksFit: m.marksFit,
+        marksNote: m.marksNote,
+        explanation: m.explanation,
+        dimensionReasons: m.dimensionReasons,
+      })),
+      topCareers: result.topCareers.map((career) => ({ slug: career.slug, title: career.title })),
+    },
   };
 }
 

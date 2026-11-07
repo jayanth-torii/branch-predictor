@@ -19,7 +19,7 @@ import { Logo } from "@/components/logo";
 import { OptionGlyph } from "@/components/option-glyph";
 import { OrbitCompanion } from "@/components/orbit-scene";
 import { ProgressBar } from "@/components/ui";
-import { QUESTIONS } from "@/lib/questions";
+import { useQuestionBank } from "@/lib/question-source";
 import { computeInterestProfile } from "@/lib/scoring";
 import { usePathora } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -54,6 +54,16 @@ export default function AssessmentPage() {
       router.replace("/discover");
     }
   }, [mounted, student.name, router]);
+
+  // The live bank: the database's version when one exists, the bundled bank
+  // otherwise. Published to the store so finishAssessment scores against the
+  // same questions the student just answered.
+  const bank = useQuestionBank();
+  const QUESTIONS = bank.core;
+  const setQuestionBanks = usePathora((state) => state.setQuestionBanks);
+  useEffect(() => {
+    setQuestionBanks(bank.source === "server" ? bank.core : null, null);
+  }, [bank.source, bank.core, setQuestionBanks]);
 
   const question = QUESTIONS[currentIndex];
   const selected = answers[question?.id ?? ""] ?? "";

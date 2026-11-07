@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { ApiBaseSync } from "@/components/api-base-sync";
 import { MobileBottomNav } from "@/components/mobile/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-dvh">
         <div className="grain" aria-hidden="true" />
+        <ApiBaseSync />
         <SiteHeader />
         {children}
         <MobileBottomNav />
