@@ -19,17 +19,62 @@ const PORT = Number(process.env.PORT ?? 4000);
  * the frontend is now a separate origin. `credentials: true` forbids the `*`
  * wildcard, so the allowed origins must be listed explicitly — set
  * CORS_ORIGIN as a comma-separated list.
+ *
+ * Entries are normalised before comparison. A browser's `Origin` header is
+ * always scheme + host + port with no trailing slash and a lowercase host, but
+ * the value pasted into a hosting dashboard is whatever was copied out of the
+ * address bar — "https://app.example.com/" failed the old exact-match check
+ * for a slash nobody could see, which is the single most common way this
+ * breaks in production.
  */
+function normalizeOrigin(value: string): string {
+  return value.trim().replace(/\/+$/, "").toLowerCase();
+}
+
 const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:3000")
   .split(",")
-  .map((o) => o.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
+
+/**
+ * An entry may also be a wildcard host — `https://*.vercel.app` — which is how
+ * you let every preview deployment of one project talk to a shared API without
+ * redeploying the API for each branch URL.
+ *
+ * `*` matches one label and never a dot, so `https://*.vercel.app` cannot be
+ * satisfied by `https://evil.attacker.vercel.app.example.com`. It DOES match
+ * every other project hosted on that domain, so only use it on a host you are
+ * content to trust wholesale — a literal origin is always the safer entry.
+ */
+function originMatches(origin: string, entry: string): boolean {
+  if (entry === origin) return true;
+  if (!entry.includes("*")) return false;
+  const pattern = entry
+    .split("*")
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("[^.]+");
+  return new RegExp(`^${pattern}$`).test(origin);
+}
 
 app.use(
   cors({
     origin(origin, callback) {
       // Same-origin requests and server-to-server calls arrive with no Origin.
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (!origin) return callback(null, true);
+      const candidate = normalizeOrigin(origin);
+      if (allowedOrigins.some((entry) => originMatches(candidate, entry))) {
+        // Echo the origin exactly as sent. A normalised value would not match
+        // what the browser compares against.
+        return callback(null, origin);
+      }
+      // Logged, because the only other place this surfaces is the browser
+      // console of whoever hit it — and they are usually not the person who
+      // can edit CORS_ORIGIN.
+      console.warn(
+        `[pathora] CORS rejected ${origin}. CORS_ORIGIN allows: ${
+          allowedOrigins.join(", ") || "(nothing)"
+        }`,
+      );
       callback(new Error(`Origin ${origin} is not allowed by CORS.`));
     },
     credentials: true,
@@ -42,12 +87,18 @@ app.use(cookieParser());
 // Liveness. Reports whether a database and an AI provider are configured,
 // without leaking either value — the frontend uses this to decide whether to
 // offer server-backed features at all.
+//
+// `corsOrigins` is included deliberately. A blocked request shows up only in
+// the browser console of whoever hit it, with no way to see what the server
+// would have accepted; one GET now answers that. The values are public
+// frontend URLs, never a credential.
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     service: "pathora-backend",
     database: Boolean(process.env.MONGODB_URI),
     ai: Boolean(process.env.LLM_API_KEY ?? process.env.OPENAI_API_KEY),
+    corsOrigins: allowedOrigins,
   });
 });
 
