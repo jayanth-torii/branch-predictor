@@ -117,7 +117,7 @@ const PCM: StreamQuestion[] = [
     title: "A cut apple on the plate turns brown in twenty minutes. What happened?",
     prompt: "Nothing was added to it. Something in the air got involved.",
     options: [
-      { id: "A", label: "It lost water and dried", emoji: "💧" },
+      { id: "A", label: "It was already brown under the skin", emoji: "💧" },
       { id: "B", label: "Light bleached the surface", emoji: "☀️" },
       { id: "C", label: "Oxygen in the air reacted with it", emoji: "🍎" },
       { id: "D", label: "Bacteria ate the sugar", emoji: "🦠" },
@@ -220,8 +220,8 @@ const PCM: StreamQuestion[] = [
     prompt: "Area depends on the radius in a particular way.",
     options: [
       { id: "A", label: "Yes, exactly twice", emoji: "✌️" },
-      { id: "B", label: "A little more than twice", emoji: "📈" },
-      { id: "C", label: "Slightly less than twice", emoji: "📉" },
+      { id: "B", label: "No, slightly less than twice", emoji: "📉" },
+      { id: "C", label: "No, about eight times as much", emoji: "📈" },
       { id: "D", label: "No, about four times as much", emoji: "🍕" },
     ],
     correctId: "D",
@@ -237,9 +237,9 @@ const PCM: StreamQuestion[] = [
     prompt: "Look at the gaps between the numbers, not the numbers themselves.",
     options: [
       { id: "A", label: "42", emoji: "🎯" },
-      { id: "B", label: "38", emoji: "🔢" },
-      { id: "C", label: "40", emoji: "✨" },
-      { id: "D", label: "36", emoji: "🤷" },
+      { id: "B", label: "40", emoji: "🔢" },
+      { id: "C", label: "50", emoji: "✨" },
+      { id: "D", label: "60", emoji: "🤷" },
     ],
     correctId: "A",
     explanation:
@@ -461,7 +461,7 @@ const PCMB: StreamQuestion[] = [
     prompt: "Keep the proportion the same and scale it up.",
     options: [
       { id: "A", label: "600 ml", emoji: "🥛" },
-      { id: "B", label: "700 ml", emoji: "🤔" },
+      { id: "B", label: "900 ml", emoji: "🤔" },
       { id: "C", label: "750 ml", emoji: "🍮" },
       { id: "D", label: "1200 ml", emoji: "🪣" },
     ],
@@ -496,7 +496,7 @@ const PCMB: StreamQuestion[] = [
     options: [
       { id: "A", label: "10%", emoji: "➕" },
       { id: "B", label: "20%", emoji: "🤔" },
-      { id: "C", label: "11%", emoji: "📐" },
+      { id: "C", label: "40%", emoji: "📐" },
       { id: "D", label: "21%", emoji: "🎯" },
     ],
     correctId: "D",
@@ -599,7 +599,7 @@ const PCMC: StreamQuestion[] = [
     title: "A 10000 mAh power bank does not fully charge a 5000 mAh phone twice. Where is the shortfall?",
     prompt: "Charging is a conversion, and every conversion costs something.",
     options: [
-      { id: "A", label: "The rating on the power bank is fake", emoji: "🏷️" },
+      { id: "A", label: "mAh on a power bank means minutes, not charge", emoji: "🏷️" },
       { id: "B", label: "The phone refuses the last charge", emoji: "🚫" },
       { id: "C", label: "Energy is lost as heat during conversion", emoji: "🌡️" },
       { id: "D", label: "The cable stores the extra charge", emoji: "🔗" },
