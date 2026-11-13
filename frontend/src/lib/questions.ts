@@ -11,16 +11,16 @@ export const QUESTIONS: Question[] = [
     options: [
       {
         id: "A",
-        label: "Trying to build that app or bot you saw on YouTube",
-        detail: "Half the code copied, half your own, and it finally runs.",
+        label: "Pushing your phone or laptop to do something new",
+        detail: "A setting, a shortcut, a trick nobody showed you - and it works.",
         icon: "code",
         weights: { technology: 5, analytical: 2, engineering: 1 },
-        feedback: "A builder's instinct - you like seeing an idea actually run.",
+        feedback: "A builder's instinct - you want to run the machine, not just use it.",
       },
       {
         id: "B",
-        label: "Making the fest poster or editing a reel",
-        detail: "Changing the font for the ninth time because it still looks off.",
+        label: "Filling the back pages of your notebook with drawings",
+        detail: "Or re-editing one reel on your phone until it finally looks right.",
         icon: "palette",
         weights: { creativity: 5, technology: 2 },
         feedback: "A visual instinct - you notice the small things most people scroll past.",
@@ -35,8 +35,8 @@ export const QUESTIONS: Question[] = [
       },
       {
         id: "D",
-        label: "Sitting at the shop or selling something online",
-        detail: "Who is buying, at what price, and what would sell better.",
+        label: "Working out how to turn something into pocket money",
+        detail: "Who would buy it, at what price, and what would sell better.",
         icon: "briefcase",
         weights: { business: 5, analytical: 1 },
         feedback: "An enterprising instinct - you spot openings where others see a slow afternoon.",
@@ -69,8 +69,8 @@ export const QUESTIONS: Question[] = [
     options: [
       {
         id: "A",
-        label: "Building any app or website you can picture",
-        detail: "Think of a tool in the morning, have it working by night.",
+        label: "Making a computer do exactly what you want",
+        detail: "Not just using the apps - understanding what runs underneath them.",
         icon: "code",
         weights: { technology: 5, creativity: 2 },
         feedback: "You want tech to be the thing you make with, not just the thing you use.",
@@ -78,7 +78,7 @@ export const QUESTIONS: Question[] = [
       {
         id: "B",
         label: "Drawing or designing anything that is in your head",
-        detail: "The poster, the logo, the edit - exactly as you imagined it.",
+        detail: "The rangoli, the class board, the edit - exactly as you pictured it.",
         icon: "palette",
         weights: { creativity: 5, technology: 1 },
         feedback: "You care about craft - the gap between okay and really good.",
@@ -127,16 +127,16 @@ export const QUESTIONS: Question[] = [
     options: [
       {
         id: "A",
-        label: "An app your college would actually use",
-        detail: "Timetable, notes, attendance - something that saves everyone a daily headache.",
+        label: "Something on a computer your class would use every day",
+        detail: "A shared timetable, a notes folder, an attendance sheet that actually works.",
         icon: "code",
         weights: { technology: 5, analytical: 2 },
         feedback: "You enjoy building digital things real people use - part logic, part care.",
       },
       {
         id: "B",
-        label: "The whole look of the annual fest",
-        detail: "Name, logo, posters, stage backdrop, the reel at the end.",
+        label: "How the fest looks on the day",
+        detail: "The banner, the stage backdrop, the decoration everybody photographs.",
         icon: "palette",
         weights: { creativity: 5, business: 1, technology: 1 },
         feedback: "You want your work to be seen, and to change how a thing feels.",
@@ -185,16 +185,16 @@ export const QUESTIONS: Question[] = [
     options: [
       {
         id: "A",
-        label: "A program that refuses to run",
-        detail: "One missing bracket somewhere, and you will find it.",
+        label: "A phone or laptop that has suddenly stopped behaving",
+        detail: "One setting is wrong somewhere, and you are not sleeping till you find it.",
         icon: "code",
         weights: { technology: 5, analytical: 3 },
         feedback: "Errors do not scare you - you read them like clues.",
       },
       {
         id: "B",
-        label: "A poster that is still not right",
-        detail: "Shifting the text a few pixels at a time until it finally sits well.",
+        label: "A drawing or an edit that is still not right",
+        detail: "Moving it a little at a time until it finally sits properly.",
         icon: "palette",
         weights: { creativity: 5, communication: 1 },
         feedback: "You solve problems by making them clearer to look at.",
@@ -359,8 +359,8 @@ export const QUESTIONS: Question[] = [
     options: [
       {
         id: "A",
-        label: "Building the part that has to work",
-        detail: "The code, the app, the thing that must not crash during the demo.",
+        label: "Handling the technical part nobody else will touch",
+        detail: "The laptop, the projector, the file that must not fail during the demo.",
         icon: "code",
         weights: { technology: 5, engineering: 1 },
         feedback: "You are the one who turns a plan into something that runs.",
