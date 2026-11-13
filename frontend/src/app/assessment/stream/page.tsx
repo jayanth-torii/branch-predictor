@@ -10,6 +10,7 @@ import { Logo } from "@/components/logo";
 import { ProgressBar } from "@/components/ui";
 import { useHydrated } from "@/lib/client-hooks";
 import { useQuestionBank } from "@/lib/question-source";
+import { STREAM_SALT, shuffleBank } from "@/lib/shuffle";
 import { usePathora } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -30,19 +31,32 @@ export default function StreamQuizPage() {
 
   const bank = useQuestionBank();
   // Memoised: a fresh array every render would re-fire the effect below.
-  const questions = useMemo(
+  const streamBank = useMemo(
     () => (student.stream ? (bank.stream[student.stream] ?? []) : []),
     [bank.stream, student.stream],
   );
+
+  /* Same seed as stage 1, different salt — so a student does not meet this
+     round in a permutation derived from the number that ordered the last one.
+     Order only: `correctId` and every option id are untouched, so marking is
+     unaffected. */
+  const runSeed = usePathora((state) => state.runSeed);
+  const questions = useMemo(
+    () => shuffleBank(streamBank, runSeed, STREAM_SALT),
+    [streamBank, runSeed],
+  );
+
   const setQuestionBanks = usePathora((state) => state.setQuestionBanks);
   useEffect(() => {
     // Stage 2 is marked against its own correctId, so the bank the student sat
-    // has to reach the store before they finish.
+    // has to reach the store before they finish. The CANONICAL list goes in,
+    // not the shuffled one — marking looks every answer up by id, and the
+    // stored bank should read the way the question bank is authored.
     setQuestionBanks(
       bank.source === "server" ? bank.core : null,
-      bank.source === "server" ? questions : null,
+      bank.source === "server" ? streamBank : null,
     );
-  }, [bank.source, bank.core, questions, setQuestionBanks]);
+  }, [bank.source, bank.core, streamBank, setQuestionBanks]);
   const question = questions[streamIndex];
   const chosenId = question ? streamAnswers[question.id] : undefined;
   const answered = Boolean(chosenId);

@@ -20,6 +20,7 @@ import { OptionGlyph } from "@/components/option-glyph";
 import { OrbitCompanion } from "@/components/orbit-scene";
 import { ProgressBar } from "@/components/ui";
 import { useQuestionBank } from "@/lib/question-source";
+import { OPTION_LETTERS, shuffleBank } from "@/lib/shuffle";
 import { computeInterestProfile } from "@/lib/scoring";
 import { usePathora } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -59,8 +60,16 @@ export default function AssessmentPage() {
   // otherwise. Published to the store so finishAssessment scores against the
   // same questions the student just answered.
   const bank = useQuestionBank();
-  const QUESTIONS = bank.core;
   const setQuestionBanks = usePathora((state) => state.setQuestionBanks);
+
+  /* The board this student sits: the same questions and the same options,
+     in an order derived from their own run seed. Order only — every id and
+     weight is untouched, so `finishAssessment` scores against the canonical
+     bank below and gets the identical profile. Nothing renders before
+     `mounted`, so the server never sees a shuffled board to disagree with. */
+  const runSeed = usePathora((state) => state.runSeed);
+  const QUESTIONS = useMemo(() => shuffleBank(bank.core, runSeed), [bank.core, runSeed]);
+
   useEffect(() => {
     setQuestionBanks(bank.source === "server" ? bank.core : null, null);
   }, [bank.source, bank.core, setQuestionBanks]);
@@ -203,8 +212,14 @@ export default function AssessmentPage() {
               </p>
 
               <div className="mt-6 grid gap-2.5 sm:grid-cols-2 md:mt-7">
-                {question.options.map((option) => {
+                {question.options.map((option, optionIndex) => {
                   const active = selected === option.id;
+                  // The last card on an odd-length list spans both columns.
+                  // This used to test for `id === "G"`, which only worked while
+                  // the options were in their authored order.
+                  const spans =
+                    question.options.length % 2 === 1 &&
+                    optionIndex === question.options.length - 1;
                   return (
                     <motion.button
                       key={option.id}
@@ -221,7 +236,7 @@ export default function AssessmentPage() {
                         active
                           ? "border-orange shadow-[0_18px_40px_-26px_rgba(255,107,53,0.9)]"
                           : "border-midnight/[0.09] hover:border-midnight/25",
-                        option.id === "G" && "sm:col-span-2",
+                        spans && "sm:col-span-2",
                       )}
                     >
                       <span
@@ -245,7 +260,11 @@ export default function AssessmentPage() {
                                 : "border-midnight/15 text-slate-ink/60",
                             )}
                           >
-                            {active ? <Check className="size-2.5" strokeWidth={4} /> : option.id}
+                            {active ? (
+                              <Check className="size-2.5" strokeWidth={4} />
+                            ) : (
+                              OPTION_LETTERS[optionIndex]
+                            )}
                           </span>
                         </span>
                         <span className="mt-1 block text-[0.72rem] leading-relaxed text-slate-ink">

@@ -11,6 +11,7 @@ import { QUESTIONS } from "./questions";
 import { summariseStreamQuiz } from "./stream-questions";
 import { apiErrorMessage, createSubmission } from "./api";
 import { buildResult } from "./scoring";
+import { newRunSeed } from "./shuffle";
 import type {
   AdminData,
   AssessmentResult,
@@ -53,6 +54,15 @@ type PathoraState = {
    */
   activeCoreBank: Question[] | null;
   activeStreamBank: StreamQuestion[] | null;
+  /**
+   * Seeds this student's question and option order. Minted once per run in
+   * `resetAssessment`, persisted, and never regenerated mid-assessment — a
+   * refresh has to bring the same board back.
+   *
+   * 0 means "do not shuffle", which is what a run already in progress when
+   * this shipped will read, so nobody gets reshuffled halfway through.
+   */
+  runSeed: number;
   setQuestionBanks: (core: Question[] | null, stream: StreamQuestion[] | null) => void;
   setStudent: (patch: Partial<Student>) => void;
   joinBatch: (code: string) => void;
@@ -108,6 +118,10 @@ export const usePathora = create<PathoraState>()(
       apiBase: null,
       activeCoreBank: null,
       activeStreamBank: null,
+      // Deliberately 0, not a random value: this object is built during server
+      // rendering too, and a seed minted here would differ between the two
+      // passes. The real seed is minted in resetAssessment, in a click.
+      runSeed: 0,
 
       setQuestionBanks: (core, stream) =>
         set(() => ({ activeCoreBank: core, activeStreamBank: stream })),
@@ -182,6 +196,9 @@ export const usePathora = create<PathoraState>()(
 
       resetAssessment: () =>
         set(() => ({
+          // A new run, so a new board. This only ever runs from the Discover
+          // form's submit handler, which is a click — never during render.
+          runSeed: newRunSeed(),
           answers: {},
           currentIndex: 0,
           xp: 0,

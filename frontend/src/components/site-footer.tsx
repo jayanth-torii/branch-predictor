@@ -270,31 +270,42 @@ export function SiteFooter() {
               Recommendations are guidance, not admission guarantees. Always verify eligibility and
               deadlines with the institution you are applying to.
             </p>
-            <div className="order-3 flex items-center justify-between gap-5 lg:justify-end">
-              <span className="flex items-center gap-2.5">
+            <div className="order-3 flex items-center justify-between gap-6 lg:justify-end">
+              <span className="flex min-w-0 shrink-0 items-center gap-2.5">
                 <span className="shrink-0 font-semibold">Powered by</span>
-                {/* The supplied mark is a flat PNG on a near-black field rather
-                    than a transparent cut-out. `screen` drops that dark field
-                    against the navy slab and keeps the white and orange strokes,
-                    which is why this band must stay dark in both themes. */}
+                {/* The supplied PNG was artwork composited onto a near-black
+                    field, with roughly a fifth of the canvas as dead padding.
+                    `mix-blend-screen` hid most of that field but not all of it
+                    — the corners are a dark navy, not pure black — so a faint
+                    rectangle sat behind the mark and its box ran wider than
+                    the lettering, crowding the control beside it.
+
+                    This file is the same artwork keyed to real transparency
+                    and cropped to its own bounds (552x134, not 652x217), so
+                    the box is the mark. No blend mode, nothing to collide
+                    with. The lettering is white, so this band still has to
+                    stay dark in both themes. */}
                 <Image
-                  src="/powered-by-jayanth-gowda.png"
+                  src="/powered-by-jayanth.png"
                   alt="Jayanth Gowda"
-                  width={2172}
-                  height={724}
-                  sizes="132px"
-                  className="h-8 w-auto mix-blend-screen"
+                  width={552}
+                  height={134}
+                  sizes="116px"
+                  className="h-7 w-auto shrink-0"
                 />
               </span>
+              {/* An icon button, not a labelled one: two short text runs on one
+                  line read as a single confused string at small widths. */}
               <button
                 type="button"
                 onClick={() => window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" })}
-                className="group/top flex min-h-11 shrink-0 items-center gap-1.5 text-xs font-semibold text-slate-ink transition-colors hover:text-orange sm:min-h-0"
+                aria-label="Back to top"
+                title="Back to top"
+                className="group/top grid size-11 shrink-0 place-items-center rounded-full border border-white/15 text-slate-ink transition-colors hover:border-orange hover:text-orange"
               >
-                Back to top
                 <ArrowUp
                   aria-hidden="true"
-                  className="size-3.5 transition-transform duration-300 group-hover/top:-translate-y-0.5"
+                  className="size-4 transition-transform duration-300 group-hover/top:-translate-y-0.5"
                 />
               </button>
             </div>
