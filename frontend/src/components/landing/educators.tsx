@@ -13,7 +13,9 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Reveal } from "@/components/ui";
+import { siteUrl } from "@/lib/site";
 
 /* ══════════════════════════════════════════════════════════════════════════
    FOR TRAINERS & PU INSTITUTIONS — the batch pass.
@@ -45,20 +47,11 @@ const PROMISES = [
   { icon: ShieldCheck, text: "No student accounts, no emails collected" },
 ];
 
-/* A stylised QR block. The data area is a deterministic function of the cell
-   index — no Date, no Math.random — so the pass renders identically on the
-   server and the client and never trips hydration. */
-const QR_CELLS = 13;
-const QR_FINDERS = [
-  [0, 0],
-  [QR_CELLS - 3, 0],
-  [0, QR_CELLS - 3],
-];
-
-function isQuietCell(x: number, y: number): boolean {
-  // The ring of empty cells each finder square needs to stay legible.
-  return QR_FINDERS.some(([fx, fy]) => x >= fx - 1 && x <= fx + 3 && y >= fy - 1 && y <= fy + 3);
-}
+/**
+ * What the pass's QR actually encodes. An absolute URL, not a relative path:
+ * the thing scanning it is a phone that has never visited this origin.
+ */
+const JOIN_URL = siteUrl(`/join/${BATCH_CODE}`);
 
 export function EducatorsSection() {
   const reduced = useReducedMotion();
@@ -211,60 +204,36 @@ export function EducatorsSection() {
                     <p className="mt-2.5 truncate text-[1rem] text-white/70">PU 2027 · Science</p>
                   </div>
 
-                  {/* Stylised QR. Decorative: it encodes nothing, so it is
-                      hidden rather than described as a scannable code. */}
-                  <span aria-hidden="true" className="relative shrink-0">
-                    <svg viewBox="0 0 70 70" className="size-[4.4rem] sm:size-[5rem]">
-                      <rect x="5" y="5" width="60" height="60" rx="3" fill="#ffffff" />
-                      {Array.from({ length: QR_CELLS }, (_, y) =>
-                        Array.from({ length: QR_CELLS }, (_, x) => {
-                          if (isQuietCell(x, y)) return null;
-                          const on = (x * 5 + y * 11 + ((x ^ y) * 3)) % 7 < 3;
-                          if (!on) return null;
-                          return (
-                            <rect
-                              key={`${x}-${y}`}
-                              x={8 + x * 4.2}
-                              y={8 + y * 4.2}
-                              width="3.4"
-                              height="3.4"
-                              fill="#0b1226"
-                            />
-                          );
-                        }),
-                      )}
-                      {QR_FINDERS.map(([fx, fy]) => (
-                        <g key={`${fx}-${fy}`}>
-                          <rect
-                            x={8 + fx * 4.2 - 1}
-                            y={8 + fy * 4.2 - 1}
-                            width="14.6"
-                            height="14.6"
-                            fill="none"
-                            stroke="#0b1226"
-                            strokeWidth="2.6"
-                          />
-                          <rect
-                            x={8 + fx * 4.2 + 3.4}
-                            y={8 + fy * 4.2 + 3.4}
-                            width="5.8"
-                            height="5.8"
-                            fill="#0b1226"
-                          />
-                        </g>
-                      ))}
-                      {/* Scanner brackets. */}
-                      <g
-                        fill="none"
-                        stroke="var(--color-orange)"
-                        strokeWidth="3.4"
-                        strokeLinecap="round"
-                      >
-                        <path d="M2 14 V5 Q2 2 5 2 H14" />
-                        <path d="M56 2 H65 Q68 2 68 5 V14" />
-                        <path d="M68 56 V65 Q68 68 65 68 H56" />
-                        <path d="M14 68 H5 Q2 68 2 65 V56" />
-                      </g>
+                  {/* A real, scannable QR for the join URL. It is a working
+                      control, not decoration, so it carries a title rather
+                      than aria-hidden — but it duplicates the "Try this code
+                      live" link beside it, so nothing is lost if a reader
+                      skips it. The orange brackets sit on the container edge,
+                      clear of the quiet zone the scanner needs. */}
+                  <span className="relative grid size-[4.8rem] shrink-0 place-items-center rounded-xl bg-white sm:size-[5.4rem]">
+                    <QRCodeSVG
+                      value={JOIN_URL}
+                      size={168}
+                      level="M"
+                      marginSize={1}
+                      bgColor="#ffffff"
+                      fgColor="#0b1226"
+                      title={`Scan to open batch ${BATCH_CODE}`}
+                      className="size-[84%]"
+                    />
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 70 70"
+                      className="pointer-events-none absolute inset-0 size-full"
+                      fill="none"
+                      stroke="var(--color-orange)"
+                      strokeWidth="3.4"
+                      strokeLinecap="round"
+                    >
+                      <path d="M3 15 V6 Q3 3 6 3 H15" />
+                      <path d="M55 3 H64 Q67 3 67 6 V15" />
+                      <path d="M67 55 V64 Q67 67 64 67 H55" />
+                      <path d="M15 67 H6 Q3 67 3 64 V55" />
                     </svg>
                   </span>
                 </div>
