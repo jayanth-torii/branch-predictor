@@ -14,7 +14,6 @@ import {
   Users,
 } from "lucide-react";
 import { Reveal } from "@/components/ui";
-import { EducatorScene } from "@/components/landing/landing-art";
 
 /* ══════════════════════════════════════════════════════════════════════════
    FOR TRAINERS & PU INSTITUTIONS — the batch pass.
@@ -134,16 +133,10 @@ export function EducatorsSection() {
             </span>
           </h2>
 
-          {/* The scene is lifted into the headline's right margin rather than
-              positioned absolutely: a flex row cannot land on top of the copy
-              at a breakpoint nobody measured. */}
-          <div className="mt-5 flex items-start gap-6">
-            <p className="max-w-sm text-[0.95rem] leading-relaxed text-slate-ink">
-              Students join with a batch code — no accounts, no emails, nothing to set up. You get
-              interest distribution, course demand and the students still undecided, aggregated.
-            </p>
-            <EducatorScene className="-mt-20 hidden w-[13rem] shrink-0 lg:block" />
-          </div>
+          <p className="mt-5 max-w-md text-[0.95rem] leading-relaxed text-slate-ink">
+            Students join with a batch code — no accounts, no emails, nothing to set up. You get
+            interest distribution, course demand and the students still undecided, aggregated.
+          </p>
 
           <ul className="mt-7 space-y-3.5">
             {PROMISES.map((promise) => (
