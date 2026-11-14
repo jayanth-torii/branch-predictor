@@ -184,9 +184,23 @@ export const submissionCreateSchema = z.strictObject({
 
 export type SubmissionCreate = z.infer<typeof submissionCreateSchema>;
 
-export const adminLoginSchema = z.object({
-  passcode: z.string().max(200),
-});
+/**
+ * Admin login accepts either shape.
+ *
+ * The email/password pair is the real form. The bare `passcode` branch is the
+ * single-field login this replaced, kept so a browser still running the
+ * previously deployed bundle can sign in during the rollout window rather than
+ * seeing a validation error it cannot act on.
+ */
+export const adminLoginSchema = z.union([
+  z.object({
+    email: z.string().trim().min(3).max(200),
+    password: z.string().min(1).max(200),
+  }),
+  z.object({
+    passcode: z.string().min(1).max(200),
+  }),
+]);
 
 export const adminDataQuerySchema = z.object({
   latest: z.coerce.boolean().default(true),

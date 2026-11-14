@@ -8,12 +8,12 @@ import {
   FileQuestion,
   GraduationCap,
   LayoutDashboard,
-  Lock,
   LogOut,
   Users,
 } from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { useHydrated } from "@/lib/client-hooks";
+import { AdminLoginScreen } from "@/components/admin/login-screen";
 import { SiteFooter } from "@/components/site-footer";
 import { usePathora } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -22,8 +22,6 @@ import {
   fetchAdminSession,
   postAdminLogin,
 } from "@/lib/api";
-
-export const ADMIN_PASSCODE_ENV = "pathora-demo";
 
 const TABS = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -54,7 +52,6 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
   const isUnlocked = useRef(false);
 
   const [mode, setMode] = useState<"locked" | "checking" | "unlocked" | "error">("locked");
-  const [passcode, setPasscode] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -138,20 +135,18 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     }
   }
 
-  async function login(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!passcode.trim()) return;
+  async function login(email: string, password: string) {
+    if (!email || !password) return;
     setSubmitting(true);
     setFailure(null);
     const base = apiBaseUrl();
     state.setApiBase(base);
     try {
-      const login = await postAdminLogin(base, passcode.trim());
+      const login = await postAdminLogin(base, email, password);
       if (login?.ok) {
         isUnlocked.current = true;
         sessionStorage.setItem("pathora-admin-unlocked", "1");
         setMode("unlocked");
-        setPasscode("");
         await refreshAdminData(base);
         return;
       }
@@ -177,7 +172,6 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     state.setAdminData(state.admin.batches, []);
     state.setApiBase(null);
     setMode("locked");
-    setPasscode("");
     setFailure(null);
   }
 
@@ -194,58 +188,14 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     );
   }
 
-  if (mode === "checking" || mode === "error") {
+  if (mode === "checking" || mode === "error" || mode === "locked") {
     return (
-      <main className="mx-auto flex w-full max-w-lg flex-col justify-center px-5 py-16 sm:py-24">
-        <div className="card p-7 sm:p-9">
-          <span className="grid size-11 place-items-center rounded-2xl bg-peach text-orange">
-            <Lock className="size-5" aria-hidden="true" />
-          </span>
-          <p className="eyebrow mt-5">Educator workspace</p>
-          <h1 className="display mt-2 text-2xl text-midnight">Restricted to trainers &amp; admins</h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-ink">
-            {mode === "checking"
-              ? "Checking your admin session against the server…"
-              : "That access code did not unlock this workspace."}
-          </p>
-          <form onSubmit={login} className="mt-6 space-y-3">
-            <label htmlFor="passcode" className="text-xs font-semibold uppercase tracking-wide text-slate-ink">
-              Access code
-            </label>
-            <input
-              id="passcode"
-              type="password"
-              value={passcode}
-              onChange={(event) => setPasscode(event.target.value)}
-              placeholder="Enter access code"
-              autoComplete="off"
-              className="w-full rounded-2xl border border-midnight/12 bg-arctic px-4 py-3 text-sm text-midnight outline-none transition focus:border-orange focus:bg-surface"
-            />
-            {failure && (
-              <p role="alert" className="rounded-xl bg-orange/10 px-3 py-2 text-xs font-semibold text-orange">
-                {failure}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn btn-primary w-full"
-            >
-              {submitting ? "Verifying…" : "Unlock dashboard"}
-            </button>
-          </form>
-          <div className="mt-4 rounded-xl bg-fog px-3.5 py-2.5 text-[0.72rem] text-indigo">
-            Demo access code: <code className="font-bold">pathora-demo</code>
-          </div>
-          <p className="mt-4 text-[0.66rem] leading-relaxed text-slate-ink">
-            The access code is verified server-side. Batches and student records are stored in MongoDB
-            when the backend is configured; the browser keeps a short-lived read cache only.
-          </p>
-          <Link href="/" className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-slate-ink hover:text-midnight md:mt-5 md:min-h-0">
-            ← Back to Pathora AI
-          </Link>
-        </div>
-      </main>
+      <AdminLoginScreen
+        onSubmit={(email, password) => void login(email, password)}
+        submitting={submitting}
+        failure={failure}
+        checking={mode === "checking"}
+      />
     );
   }
 

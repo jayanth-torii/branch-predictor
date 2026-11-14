@@ -86,8 +86,15 @@ export async function fetchAdminSession(base: string | null): Promise<SessionRes
   return adminFetch(base, "/api/admin/session") as Promise<SessionResponse>;
 }
 
-export async function postAdminLogin(base: string | null, passcode: string): Promise<LoginResponse> {
-  return adminFetch(base, "/api/admin/session", { method: "POST", body: JSON.stringify({ passcode }) }) as Promise<LoginResponse>;
+export async function postAdminLogin(
+  base: string | null,
+  email: string,
+  password: string,
+): Promise<LoginResponse> {
+  return adminFetch(base, "/api/admin/session", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  }) as Promise<LoginResponse>;
 }
 
 export async function clearAdminSession(base: string | null): Promise<void> {

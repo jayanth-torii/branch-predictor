@@ -24,8 +24,10 @@ export function dbError(res: Response, error?: unknown) {
     .json({ error: "Database temporarily unavailable. Please try again in a moment." });
 }
 
-export function unauthorized(res: Response) {
-  return res.status(401).json({ error: "Admin authentication required for this endpoint." });
+export function unauthorized(res: Response, message?: string) {
+  return res
+    .status(401)
+    .json({ error: message ?? "Admin authentication required for this endpoint." });
 }
 
 export function notFound(res: Response) {

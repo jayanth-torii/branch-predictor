@@ -3,14 +3,51 @@ import { Router } from "express";
 import {
   isAdminRequest,
   isAuthConfigured,
+  verifyCredentials,
   verifyPasscode,
   startAdminSession,
   endAdminSession,
+  clientKey,
 } from "../lib/auth.js";
 import { adminLoginSchema } from "../lib/validation.js";
 import { badRequest, unauthorized } from "../lib/http.js";
 
 export const adminRouter = Router();
+
+/* ── Brute-force guard ─────────────────────────────────────────────────────
+   This endpoint now takes a real email and password rather than a shared
+   code, which makes it worth guessing at. Ten wrong answers from one address
+   in fifteen minutes and that address waits.
+
+   In memory on purpose: one small API process, and a limiter that survives a
+   restart would need a store this service does not otherwise have. A restart
+   clearing the counters is the known limit of it.
+
+   Only FAILURES count. A successful sign-in clears the address, so the person
+   who typed a password wrong twice and then got it right is not punished. */
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_FAILURES = 10;
+const loginFailures = new Map<string, number[]>();
+
+function recentFailures(key: string, now: number): number[] {
+  return (loginFailures.get(key) ?? []).filter((at) => now - at < LOGIN_WINDOW_MS);
+}
+
+function isLoginBlocked(key: string): boolean {
+  return recentFailures(key, Date.now()).length >= LOGIN_MAX_FAILURES;
+}
+
+function noteLoginFailure(key: string): void {
+  const now = Date.now();
+  const recent = recentFailures(key, now);
+  recent.push(now);
+  loginFailures.set(key, recent);
+  if (loginFailures.size > 500) {
+    for (const [other, times] of loginFailures) {
+      if (!times.some((at) => now - at < LOGIN_WINDOW_MS)) loginFailures.delete(other);
+    }
+  }
+}
 
 /**
  * Mounted at /api/admin, so every path below is relative to that.
@@ -41,7 +78,7 @@ adminRouter.get("/session", (req, res) => {
   }
 });
 
-/** POST /api/admin/session — exchange the passcode for a signed session cookie. */
+/** POST /api/admin/session — exchange credentials for a signed session cookie. */
 adminRouter.post("/session", (req, res) => {
   try {
     // Without a passcode AND a signing secret there is no session to issue.
@@ -58,15 +95,32 @@ adminRouter.post("/session", (req, res) => {
       return badRequest(res, "The request body must be valid JSON.");
     }
 
-    const parsed = adminLoginSchema.safeParse(body);
-    if (!parsed.success) {
-      return badRequest(res, parsed.error.issues[0]?.message ?? "Invalid request.");
-    }
-    // Constant-time comparison lives in verifyPasscode.
-    if (!verifyPasscode(parsed.data.passcode)) {
-      return unauthorized(res);
+    const key = clientKey(req);
+    if (isLoginBlocked(key)) {
+      return res.status(429).json({
+        error: "Too many failed sign-in attempts. Try again in fifteen minutes.",
+      });
     }
 
+    const parsed = adminLoginSchema.safeParse(body);
+    if (!parsed.success) {
+      return badRequest(res, "Enter your email address and password.");
+    }
+
+    // Constant-time comparison lives in the auth module.
+    const ok =
+      "passcode" in parsed.data
+        ? verifyPasscode(parsed.data.passcode)
+        : verifyCredentials(parsed.data.email, parsed.data.password);
+
+    if (!ok) {
+      noteLoginFailure(key);
+      // One message for a wrong email and a wrong password alike: saying which
+      // half failed would confirm that an address is the admin account.
+      return unauthorized(res, "That email and password did not match.");
+    }
+
+    loginFailures.delete(key);
     startAdminSession(res);
     return res.json({ ok: true });
   } catch {
