@@ -133,9 +133,12 @@ questionsRouter.patch("/core/:id", async (req, res) => {
       }
     }
 
+    const now = new Date().toISOString();
     const updated = await CoreQuestionModel.findOneAndUpdate(
       { id: req.params.id },
-      { $set: { ...parsed.data, updatedAt: new Date().toISOString() } },
+      // `editedAt` marks this row as human-edited, which is what stops the
+      // deploy-time sync from overwriting it on the next release.
+      { $set: { ...parsed.data, updatedAt: now, editedAt: now } },
       { new: true },
     ).lean();
     if (!updated) return notFound(res);
@@ -174,9 +177,12 @@ questionsRouter.patch("/stream/:id", async (req, res) => {
       return badRequest(res, "The correct answer must be one of the options.");
     }
 
+    const now = new Date().toISOString();
     const updated = await StreamQuestionModel.findOneAndUpdate(
       { id: req.params.id },
-      { $set: { ...parsed.data, updatedAt: new Date().toISOString() } },
+      // `editedAt` marks this row as human-edited, which is what stops the
+      // deploy-time sync from overwriting it on the next release.
+      { $set: { ...parsed.data, updatedAt: now, editedAt: now } },
       { new: true },
     ).lean();
     if (!updated) return notFound(res);

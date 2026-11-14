@@ -5,6 +5,7 @@ import cors from "cors";
 
 import { connectDb } from "./lib/db.js";
 import { dbError } from "./lib/http.js";
+import { syncQuestionBankOnBoot } from "./lib/question-seed.js";
 import { adminRouter } from "./routes/admin.js";
 import { batchesRouter } from "./routes/batches.js";
 import { mentorRouter } from "./routes/mentor.js";
@@ -160,9 +161,28 @@ app.use(
   },
 );
 
+/**
+ * Brings the database's question bank up to this build.
+ *
+ * Fire-and-forget after the listener is up, never awaited: a slow or
+ * unreachable Mongo must not delay the port opening, because /api/health and
+ * the admin login are how an operator diagnoses exactly that.
+ * `syncQuestionBankOnBoot` owns its own error handling and only logs.
+ */
+function startQuestionSync(): void {
+  if (!process.env.MONGODB_URI) {
+    console.log("  Questions    →  no database, serving the bundled bank");
+    return;
+  }
+  connectDb()
+    .then(() => syncQuestionBankOnBoot())
+    .catch((error) => console.error("[pathora] question sync could not connect:", error));
+}
+
 app.listen(PORT, () => {
   console.log(`\n  Pathora API  →  http://localhost:${PORT}`);
   console.log(`  CORS allows  →  ${allowedOrigins.join(", ")}`);
   console.log(`  Database     →  ${process.env.MONGODB_URI ? "configured" : "not set (routes answer 503)"}`);
   console.log(`  AI wording   →  ${process.env.LLM_API_KEY ? "configured" : "not set (deterministic only)"}\n`);
+  startQuestionSync();
 });

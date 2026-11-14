@@ -7,6 +7,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "bank": "tsx scripts/build-question-bank.mts",
+    "prebuild": "npm run bank",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",

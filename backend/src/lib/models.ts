@@ -177,6 +177,15 @@ const coreQuestionSchema = new Schema(
     measures: { type: String, default: "", trim: true, maxlength: 200 },
     options: { type: [coreOptionSchema], default: [] },
     updatedAt: { type: String, default: "" },
+    /**
+     * Set ONLY when a human edits this question through the admin screen.
+     *
+     * `updatedAt` cannot carry this: the importer stamps it too, so after any
+     * import every question looks edited. The deploy-time sync skips anything
+     * carrying `editedAt`, which is what lets repo wording flow through
+     * automatically without quietly destroying staff edits.
+     */
+    editedAt: { type: String, default: "" },
   },
   { versionKey: false },
 );
@@ -202,6 +211,8 @@ const streamQuestionSchema = new Schema(
     correctId: { type: String, required: true, trim: true, maxlength: 8 },
     explanation: { type: String, default: "", trim: true, maxlength: 800 },
     updatedAt: { type: String, default: "" },
+    /** See the note on CoreQuestion.editedAt. */
+    editedAt: { type: String, default: "" },
   },
   { versionKey: false },
 );
@@ -226,3 +237,34 @@ export const StreamQuestionModel =
 
 globalForQuestions.__pathoraCoreQuestionModel = CoreQuestionModel;
 globalForQuestions.__pathoraStreamQuestionModel = StreamQuestionModel;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   APP META
+
+   A key/value row, used so far only to remember which version of the question
+   bank was last synced into this database. It has to live in Mongo rather than
+   on disk: Render gives a web service a fresh filesystem on every deploy, so a
+   file would always read as "never synced" and re-import on every boot.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const appMetaSchema = new Schema(
+  {
+    key: { type: String, required: true, unique: true, index: true },
+    value: { type: String, default: "" },
+    updatedAt: { type: String, default: "" },
+  },
+  { versionKey: false },
+);
+
+export type AppMetaDoc = InferSchemaType<typeof appMetaSchema>;
+
+const globalForMeta = globalThis as typeof globalThis & {
+  __pathoraAppMetaModel?: Model<AppMetaDoc>;
+};
+
+export const AppMetaModel =
+  globalForMeta.__pathoraAppMetaModel ??
+  (mongoose.models.AppMeta as Model<AppMetaDoc> | undefined) ??
+  mongoose.model<AppMetaDoc>("AppMeta", appMetaSchema);
+
+globalForMeta.__pathoraAppMetaModel = AppMetaModel;
