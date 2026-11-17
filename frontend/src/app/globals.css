@@ -451,8 +451,33 @@ body {
    ══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Mobile bottom navigation height, excluding the home-indicator inset. */
-  --m-nav-h: 62px;
+  /* ── Material 3 motion ──────────────────────────────────────────────────
+     M3 names durations by length and easing by intent. These sit ALONGSIDE
+     `--ease-soft` / `--ease-spring` rather than replacing them: those two are
+     the house curves for the aurora and landing choreography and stay in
+     charge there. The mobile chrome below — navigation bar, drawer, state
+     layers — uses the M3 set, so a phone behaves the way its OS taught the
+     student to expect. */
+  --m3-dur-short: 200ms;
+  --m3-dur-medium: 300ms;
+  --m3-dur-long: 500ms;
+  --m3-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --m3-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --m3-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --m3-ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /* M3 expresses hover / focus / press as a translucent layer of the CONTENT
+     colour over the component, never as a different background colour. That
+     is why the state layer costs no new palette entry: it tints with
+     `currentColor`, so it works on every surface this theme already has. */
+  --m3-state-hover: 0.08;
+  --m3-state-focus: 0.1;
+  --m3-state-press: 0.1;
+
+  /* M3 navigation bar is 80dp: 12 top + 32 indicator + 4 gap + 16 label +
+     16 bottom. The old 62px was a guess that left the labels crowding the
+     home indicator. */
+  --m-nav-h: 80px;
   --m-safe-bottom: env(safe-area-inset-bottom, 0px);
   --m-safe-top: env(safe-area-inset-top, 0px);
   /* Sticky site header height, used for scroll-padding so anchors clear it. */
@@ -479,6 +504,38 @@ body {
   label,
   summary {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── The 300ms tap delay ────────────────────────────────────────────────
+     A mobile browser waits ~300ms after a tap to see whether a second tap is
+     coming (double-tap to zoom). `touch-action: manipulation` opts each
+     control out of double-tap zoom, so its tap fires immediately. Panning and
+     pinch-zoom are untouched, so this costs no accessibility: a student can
+     still pinch to enlarge the page.
+
+     Scoped to controls, not `*`. On a scrollable body it would do nothing
+     useful and on a canvas it would break gestures. */
+  a[href],
+  button,
+  [role="button"],
+  [role="tab"],
+  summary,
+  label {
+    touch-action: manipulation;
+  }
+
+  /* ── No sideways scroll, ever ───────────────────────────────────────────
+     One over-wide element anywhere on a page makes the WHOLE page pan
+     sideways, and on a phone that reads as a broken site rather than as one
+     wide card. `clip` and not `hidden` is the entire point: `overflow:
+     hidden` creates a scroll container, which would make the sticky site
+     header scroll away with the page. `overflow-x: clip` creates no scroll
+     container, so the header keeps sticking.
+
+     This is a backstop, not a licence — a child that overflows is still a
+     bug, and clipping it only means the bug cannot also break navigation. */
+  body {
+    overflow-x: clip;
   }
 
   /* (The hover lifts that used to be neutralised here are now guarded at their
@@ -793,43 +850,176 @@ body {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   MATERIAL 3 INTERACTION LAYER
+   --------------------------------------------------------------------------
+   Two primitives the rest of the mobile chrome is built from. Neither one
+   introduces a colour: the state layer tints with `currentColor` and the
+   press is a transform. That is deliberate — the palette is the palette, and
+   M3 interaction is expressible entirely in terms of the colour a component
+   already has.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* M3 draws hover / focus / press as a translucent sheet of the CONTENT colour
+   laid over the component. One class therefore works on a filled button, a
+   tonal chip, an outlined card and a bare icon alike. */
+.state-layer {
+  /* `isolation` alone gives the ::after the stacking context it needs without
+     claiming `position`. An unconditional `position: relative` here would
+     outrank Tailwind's own `.fixed` / `.absolute` utilities — same
+     specificity, declared later in the sheet — and would silently un-fix
+     every positioned element that also wanted a state layer. */
+  isolation: isolate;
+}
+.state-layer:not(.fixed):not(.absolute):not(.sticky):not(.relative) {
+  position: relative;
+}
+.state-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--m3-dur-short) var(--m3-ease-standard);
+}
+/* Hover only where a pointer can actually hover. On a touch screen `:hover`
+   latches after a tap and holds until the next tap lands elsewhere, which
+   would leave the last-tapped control sitting visibly tinted. */
+@media (hover: hover) and (pointer: fine) {
+  .state-layer:hover::after {
+    opacity: var(--m3-state-hover);
+  }
+}
+.state-layer:focus-visible::after {
+  opacity: var(--m3-state-focus);
+}
+.state-layer:active::after {
+  opacity: var(--m3-state-press);
+}
+.state-layer:disabled::after {
+  opacity: 0;
+}
+
+/* The pressed state for touch, replacing the grey tap flash removed above.
+   Removing that flash without putting something back in its place is the
+   single most common way a web app comes to feel dead on a phone. */
+.press {
+  transition: transform var(--m3-dur-short) var(--m3-ease-standard);
+}
+.press:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .press:active {
+    transform: none;
+  }
+}
+
+/* ── M3 navigation bar items ──────────────────────────────────────────────
+   The full M3 anatomy, which the previous centred icon-over-label was not:
+
+     12dp  padding above the indicator
+     32dp  active indicator pill, 64dp wide, icon centred inside it
+      4dp  gap
+     16dp  label, ALWAYS visible (M3 permits labels on the selected
+           destination only; with five destinations and no icon a student
+           already knows, always-on is the readable choice)
+     16dp  padding below
+     ----
+     80dp  = --m-nav-h
+
+   Selection is carried by three cues, only one of which is colour: the
+   indicator pill, a heavier icon stroke, and the orange tint. That is the
+   accessibility requirement — "which tab am I on" has to survive a colour
+   vision deficiency. */
 .m-nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  /* 11px, matching the phone type floor. iOS tab bars use 10pt, but the floor
-     is the stricter rule and these five labels still fit at 375px. */
+  justify-content: flex-start;
+  gap: 0.25rem;
+  padding: 0.75rem 0 1rem;
+  /* 11px, matching the phone type floor. iOS tab bars use 10pt, but the
+     floor is the stricter rule and five labels still fit at 360px. */
   font-size: 0.6875rem;
   font-weight: 600;
+  line-height: 1rem;
   color: var(--color-slate-ink);
-  transition: color 0.18s ease;
+  /* `transform` is named here as well as in `.press`, because this rule is
+     declared later in the sheet at equal specificity and would otherwise
+     replace the press transition outright — leaving the scale to snap. */
+  transition:
+    color var(--m3-dur-short) var(--m3-ease-standard),
+    transform var(--m3-dur-short) var(--m3-ease-standard);
 }
 .m-nav-item[data-active="true"] {
   color: var(--color-orange);
 }
-.m-nav-item:active {
-  transform: scale(0.96);
-}
-/* The active pill sits behind the icon so the label never shifts position. */
+
+/* The indicator sits BEHIND the icon, so selecting a destination never moves
+   the label — M3's reason for a pill rather than an underline. */
 .m-nav-icon {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 2.5rem;
-  height: 1.6rem;
+  width: 4rem;
+  height: 2rem;
   border-radius: 999px;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
 }
-.m-nav-item[data-active="true"] .m-nav-icon {
+/* Drawn by an absolutely positioned child so one shared pill can slide
+   between destinations. `.m-nav-indicator` is the painted element; the icon
+   is lifted above it by its own stacking position. */
+.m-nav-indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
   background: var(--color-peach);
 }
+.m-nav-icon > svg {
+  position: relative;
+}
 
-/* Scrim and sheet for the header menu. z-61 clears the bottom navigation (60)
-   so the whole page behind the sheet is both dimmed and untappable; the header
-   itself is lifted to 63 while open. */
+/* ── Compact height: a phone held sideways ────────────────────────────────
+   An 80dp navigation bar under a 72px header claims 42% of a 360px-tall
+   landscape viewport, leaving a strip of actual page between them. M3's
+   answer at compact height is a navigation RAIL down one side; short of
+   that rework, the bar collapses to its icons — which is also what iOS
+   does to a tab bar in landscape.
+
+   The label is HIDDEN, not deleted: the standard visually-hidden clip
+   keeps it in the accessibility tree, so a screen reader still announces
+   "Courses" for an icon that no longer spells it out. */
+@media (max-width: 767.98px) and (max-height: 480px) {
+  :root {
+    --m-nav-h: 56px;
+  }
+  .m-nav-item {
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+  .m-nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+}
+
+/* ── M3 modal navigation drawer ───────────────────────────────────────────
+   The header menu used to be a panel that dropped 10px from under the bar.
+   M3's navigation surface for a compact window is a modal drawer: a
+   full-height sheet on one edge, rounded on its inner edge only, over a
+   scrim.
+
+   It enters from the right because that is the edge its trigger sits on, so
+   the sheet reads as coming out from under the button that opened it. */
 .m-scrim {
   position: fixed;
   inset: 0;
@@ -837,11 +1027,52 @@ body {
   background: rgba(16, 27, 61, 0.45);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  animation: m-fade-in 0.2s ease both;
+  animation: m-fade-in var(--m3-dur-short) var(--m3-ease-standard) both;
 }
 
-.m-sheet {
-  animation: m-sheet-in 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+.m-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 62;
+  display: flex;
+  flex-direction: column;
+  /* 360dp is M3's drawer width; never more than 85% of a small phone. */
+  width: min(85vw, 360px);
+  /* 28dp on the inner edge only. The outer edge IS the screen edge, and a
+     radius there would show a sliver of the page behind it. */
+  border-radius: 1.75rem 0 0 1.75rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lift);
+  /* Every inset paid exactly ONCE, here and nowhere else inside the drawer. */
+  padding-top: max(1rem, var(--m-safe-top));
+  padding-bottom: max(1.25rem, var(--m-safe-bottom));
+  padding-right: env(safe-area-inset-right, 0px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: m-drawer-in var(--m3-dur-medium) var(--m3-ease-decelerate) both;
+}
+
+/* 56dp destination rows — M3's own figure — with the active one carrying a
+   tonal indicator rather than a colour change alone. */
+.m-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 3.5rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-slate-ink);
+  transition:
+    color var(--m3-dur-short) var(--m3-ease-standard),
+    background-color var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m-drawer-item[data-active="true"] {
+  background: var(--color-peach);
+  color: var(--color-orange);
 }
 
 @keyframes m-fade-in {
@@ -853,14 +1084,20 @@ body {
   }
 }
 
-@keyframes m-sheet-in {
+@keyframes m-drawer-in {
   from {
-    opacity: 0;
-    transform: translateY(-10px);
+    transform: translateX(100%);
   }
   to {
-    opacity: 1;
     transform: none;
+  }
+}
+
+/* Reduced motion means no travel — but the surface must still ARRIVE, so the
+   slide is replaced by a fade rather than dropped altogether. */
+@media (prefers-reduced-motion: reduce) {
+  .m-drawer {
+    animation: m-fade-in var(--m3-dur-short) var(--m3-ease-standard) both;
   }
 }
 
