@@ -270,7 +270,7 @@ export function AdminLoginScreen({
             href="/"
             className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-[0.8rem] font-semibold text-slate-ink transition-colors hover:text-orange"
           >
-            ← Back to Pathora AI
+            ← Back to Branch Predictor
           </Link>
         </div>
       </div>

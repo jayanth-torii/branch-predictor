@@ -102,7 +102,7 @@ function JoinBatchContent() {
             </div>
             <div className="space-y-5 p-5 sm:p-9">
               <Link href="/" className="btn btn-primary flex-1">
-                Back to Pathora AI
+                Back to Branch Predictor
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>

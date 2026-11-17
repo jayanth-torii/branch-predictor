@@ -278,7 +278,7 @@ export function EducatorsSection() {
                 </div>
 
                 <p className="mt-3.5 text-[0.88rem] leading-relaxed text-slate-ink">
-                  Students open Pathora, type the code, and start. Nothing to install.
+                  Students open Branch Predictor, type the code, and start. Nothing to install.
                 </p>
 
                 <span

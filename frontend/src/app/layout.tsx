@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { ApiBaseSync } from "@/components/api-base-sync";
+import { COURSES } from "@/lib/courses";
 import { MobileBottomNav } from "@/components/mobile/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -20,11 +21,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Pathora AI — Discover the course that feels like you",
-    template: "%s · Pathora AI",
+    default: "Branch Predictor — Discover the course that feels like you",
+    template: "%s · Branch Predictor",
   },
   description:
-    "A gamified 10-question career discovery experience for PU students. Map your interests, explore 34 non-biology UG courses, and understand why each one fits.",
+    // Derived, not typed. This line claimed "34 non-biology UG courses" while
+    // the catalogue held twelve — a number nobody updates is a number that
+    // goes stale the first time the catalogue changes.
+    `A gamified 10-question career discovery experience for PU students. Map your interests, explore ${COURSES.length} non-biology UG courses, and understand why each one fits.`,
   keywords: [
     "PU career test",
     "UG course recommendation",

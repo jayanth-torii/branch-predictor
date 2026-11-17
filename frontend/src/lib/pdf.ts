@@ -5,7 +5,13 @@ import { autoTable } from "jspdf-autotable";
 import { batchStats, courseDemand, interestDistribution } from "@/lib/batches";
 import { CAREER_BY_SLUG } from "@/lib/careers";
 import { COURSE_BY_SLUG } from "@/lib/courses";
-import { DIMENSIONS, DIMENSION_META, type Batch, type Submission } from "@/lib/types";
+import {
+  DIMENSIONS,
+  DIMENSION_META,
+  type AssessmentResult,
+  type Batch,
+  type Submission,
+} from "@/lib/types";
 
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
@@ -341,7 +347,7 @@ export async function downloadBatchReportPdf(
     y,
     "Guidance only. Course recommendations are not admission guarantees. Eligibility, cut-offs, entrance exams and deadlines vary by institution and year and must be verified directly.",
   );
-  drawFooter(doc, "Pathora AI  ·  Aggregated batch report  ·  Guidance, not admission advice");
+  drawFooter(doc, "Branch Predictor  ·  Aggregated batch report  ·  Guidance, not admission advice");
   doc.save(`pathora-batch-${safeFilename(batch.code)}.pdf`);
 }
 
@@ -454,7 +460,143 @@ export async function downloadStudentProfilePdf(submission: Submission): Promise
 
   drawFooter(
     doc,
-    "Pathora AI  ·  Individual student profile  ·  Guidance, not admission advice",
+    "Branch Predictor  ·  Individual student profile  ·  Guidance, not admission advice",
   );
-  doc.save(`pathora-student-${safeFilename(submission.name)}.pdf`);
+  doc.save(`branch-predictor-student-${safeFilename(submission.name)}.pdf`);
+}
+
+/**
+ * The summary a STUDENT downloads from /results.
+ *
+ * Deliberately a separate function from `downloadStudentProfilePdf`, which is
+ * written for an educator reading ABOUT a student — it carries conversation
+ * starters, a "share only with staff" note and third-person phrasing. Handing
+ * that to the student themselves reads like finding your own file open on
+ * somebody's desk. Same chrome, same palette, different voice: this one is
+ * addressed to "you" and ends with what to do next rather than what to ask.
+ *
+ * It takes the live `AssessmentResult` rather than a `Submission`, so it works
+ * for a student who never joined a batch and therefore has no stored record.
+ */
+export async function downloadResultSummaryPdf(result: AssessmentResult): Promise<void> {
+  const dimensionOrder = DIMENSIONS.slice().sort(
+    (a, b) => result.profile[b] - result.profile[a],
+  );
+  const eligible = result.matches.filter((match) => match.eligible);
+  const stretch = result.matches.filter((match) => !match.eligible);
+  const top = eligible[0] ?? result.matches[0];
+  const name = result.student.name || "Student";
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+
+  drawHeader(
+    doc,
+    "Your course summary",
+    name,
+    [
+      result.student.stream || "Stream not set",
+      result.student.puYear || "Class not set",
+      result.archetype.title,
+    ].join("  ·  "),
+  );
+
+  let y = 136;
+  y = drawKpis(doc, y, [
+    { label: "Your profile", value: result.archetype.title.replace("The ", "") },
+    { label: "Strongest interest", value: DIMENSION_META[dimensionOrder[0]].short },
+    { label: "Eligible courses", value: String(eligible.length) },
+    { label: "Experience", value: `${result.xp} XP` },
+  ]);
+  y += 24;
+
+  y = heading(doc, y, "What this says about you", result.archetype.title);
+  y = paragraph(doc, y, result.archetype.description);
+  y += 6;
+  y = paragraph(doc, y, result.perspective);
+  y += 10;
+
+  y = heading(doc, y, "Your interests", "Six dimensions, strongest first");
+  y = paragraph(
+    doc,
+    y,
+    "These come from the interests attached to the answers you chose. Nothing here is a mark, and there was no right answer to any question.",
+    8,
+  );
+  y += 4;
+  y = drawTable(
+    doc,
+    y,
+    ["Interest dimension", "Score (0-100)", "What it covers"],
+    dimensionOrder.map((dimension) => [
+      DIMENSION_META[dimension].label,
+      String(result.profile[dimension]),
+      DIMENSION_META[dimension].blurb,
+    ]),
+    name,
+    { 1: { halign: "right", cellWidth: 90 } },
+  );
+
+  y = heading(doc, y, "Courses open to you", `Ranked against your profile`);
+  y = drawTable(
+    doc,
+    y,
+    ["Course", "Fit", "Duration", "Why it came up for you"],
+    eligible.slice(0, 8).map((match) => [
+      match.course.name,
+      match.label,
+      match.course.duration,
+      match.explanation,
+    ]),
+    name,
+    { 1: { cellWidth: 62 }, 2: { cellWidth: 52 } },
+  );
+
+  /* Shown, not hidden. A course your stream does not usually meet is still
+     worth knowing about — the rule is an eligibility note to verify, not a
+     verdict on you, and quietly dropping these would misrepresent the
+     catalogue as smaller than it is. */
+  if (stretch.length > 0) {
+    y = heading(doc, y, "Worth knowing about", "Usually needs other subjects");
+    y = drawTable(
+      doc,
+      y,
+      ["Course", "What to check"],
+      stretch.slice(0, 5).map((match) => [match.course.name, match.course.eligibilityNotes]),
+      name,
+      { 0: { cellWidth: 130 } },
+    );
+  }
+
+  if (result.topCareers.length > 0) {
+    y = heading(doc, y, "Where these lead", "Typical routes, not promises");
+    y = paragraph(
+      doc,
+      y,
+      `Careers commonly reached from your matched courses: ${result.topCareers
+        .map((career) => career.title)
+        .join(", ")}. These are the usual routes people take, not outcomes anyone can guarantee.`,
+    );
+    y += 8;
+  }
+
+  y = heading(doc, y, "What to do next", "Three concrete steps");
+  y = paragraph(
+    doc,
+    y,
+    [
+      `1. Read the full page for ${top?.course.name ?? "your top match"} — the subjects in year one tell you more than the course title does.`,
+      "2. Check the eligibility note against your own PU subjects and marks, with the college directly. Rules change every year.",
+      "3. Show this to someone who knows you. Where they disagree with it is the useful part of the conversation.",
+    ].join("\n"),
+  );
+  y += 8;
+
+  smallNote(
+    doc,
+    y,
+    "This is guidance, not an admission decision. The ranking comes from your answers compared with each course's interest profile — it is not a prediction of how well you would do, and it cannot know about your marks, the entrance exam or the seats available this year. Verify everything with each institution before you apply.",
+  );
+
+  drawFooter(doc, "Branch Predictor  ·  Your course summary  ·  Guidance, not admission advice");
+  doc.save(`branch-predictor-${safeFilename(name)}.pdf`);
 }

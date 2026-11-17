@@ -180,7 +180,7 @@ function startQuestionSync(): void {
 }
 
 app.listen(PORT, () => {
-  console.log(`\n  Pathora API  →  http://localhost:${PORT}`);
+  console.log(`\n  Branch Predictor API  →  http://localhost:${PORT}`);
   console.log(`  CORS allows  →  ${allowedOrigins.join(", ")}`);
   console.log(`  Database     →  ${process.env.MONGODB_URI ? "configured" : "not set (routes answer 503)"}`);
   console.log("");

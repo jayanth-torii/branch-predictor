@@ -50,7 +50,7 @@ function CourseDetailContent() {
   const student = usePathora((state) => state.student);
 
   useEffect(() => {
-    if (course) document.title = `${course.name} · Pathora AI`;
+    if (course) document.title = `${course.name} · Branch Predictor`;
   }, [course]);
 
   if (!course) {

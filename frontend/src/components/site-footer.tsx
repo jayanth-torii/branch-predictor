@@ -263,7 +263,7 @@ export function SiteFooter() {
         <div className="border-t border-white/10">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6 text-xs text-slate-ink sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
             <p className="order-2 shrink-0 lg:order-1">
-              © Pathora AI · Built for PU students in India.
+              © Branch Predictor · Built for PU students in India.
             </p>
             <p className="order-1 max-w-xl leading-relaxed lg:order-2">
               Recommendations are guidance, not admission guarantees. Always verify eligibility and

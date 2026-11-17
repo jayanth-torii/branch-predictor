@@ -67,7 +67,7 @@ export default function AdminStudentsPage() {
         submission.undecided ? "Yes" : "No",
       ]),
     ];
-    downloadCsv("pathora-batch-records.csv", rows);
+    downloadCsv("branch-predictor-batch-records.csv", rows);
   }
 
   const demand = courseDemand(filtered);

@@ -40,7 +40,7 @@ function CareerContent() {
   const result = usePathora((state) => state.result);
 
   useEffect(() => {
-    if (career) document.title = `${career.title} · Pathora AI`;
+    if (career) document.title = `${career.title} · Branch Predictor`;
   }, [career]);
 
   if (!career) {

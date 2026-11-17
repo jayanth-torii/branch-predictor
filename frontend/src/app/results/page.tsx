@@ -28,12 +28,14 @@ import { useHydrated } from "@/lib/client-hooks";
 import { SiteFooter } from "@/components/site-footer";
 import { usePathora } from "@/lib/store";
 import { DIMENSION_META } from "@/lib/types";
-import { cn, downloadCsv, formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export default function ResultsPage() {
   const mounted = useHydrated();
   const [showAlternatives, setShowAlternatives] = useState(false);
   const [showIneligible, setShowIneligible] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadFailed, setDownloadFailed] = useState(false);
   const result = usePathora((state) => state.result);
 
   if (!mounted) {
@@ -49,7 +51,7 @@ export default function ResultsPage() {
       <main className="mx-auto w-full max-w-3xl px-5 py-20 sm:px-8">
         <EmptyState
           title="No profile yet"
-          description="Your results appear here after the quest: ten interest questions, then ten from your stream. It takes under ten minutes, and you can skip questions you do not connect with."
+          description="Your results appear here after the quest: ten questions about what kind of work pulls you in. It takes a few minutes, and you can skip any question you do not connect with."
         >
           <Link href="/discover" className="btn btn-primary mt-2">
             Start the assessment
@@ -72,34 +74,30 @@ export default function ResultsPage() {
 
   const snapshot = result;
 
-  function downloadSummary() {
-    const rows: (string | number)[][] = [
-      ["Pathora AI — student summary"],
-      ["Generated", formatDate(snapshot.createdAt)],
-      ["Name", snapshot.student.name],
-      ["Stream", snapshot.student.stream],
-      ["Class", snapshot.student.puYear],
-      ["Profile", snapshot.archetype.title],
-      ["XP", snapshot.xp],
-      ["Questions answered", `${snapshot.completedCount}/10`],
-      [],
-      ["Interest dimension", "Score (0-100)"],
-      ...snapshot.topDimensions.map((dimension) => [
-        DIMENSION_META[dimension].label,
-        snapshot.profile[dimension],
-      ]),
-      [],
-      ["Recommended course", "Match label", "Duration", "Why it fits"],
-      ...eligible.slice(0, 8).map((match) => [
-        match.course.name,
-        match.label,
-        match.course.duration,
-        match.explanation,
-      ]),
-      [],
-      ["Guidance only — verify eligibility and admission rules with each institution."],
-    ];
-    downloadCsv(`pathora-${snapshot.student.name.toLowerCase().replace(/\s+/g, "-")}.csv`, rows);
+  /**
+   * A PDF, not the CSV this used to produce.
+   *
+   * A spreadsheet of a career profile is the wrong artefact: a student shows
+   * this to a parent or a teacher, and "Download summary" giving them a file
+   * that opens in Excel — if it opens at all on their phone — was the reason
+   * nobody could actually use it. The PDF carries the same content plus the
+   * narrative and the eligibility notes, and it prints.
+   *
+   * jsPDF is imported dynamically so its ~400KB stays out of the bundle for
+   * everyone who never presses the button.
+   */
+  async function downloadSummary() {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const { downloadResultSummaryPdf } = await import("@/lib/pdf");
+      await downloadResultSummaryPdf(snapshot);
+    } catch {
+      // Keep the page usable; the browser console holds the detail.
+      setDownloadFailed(true);
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return (
@@ -142,11 +140,22 @@ export default function ResultsPage() {
                 Explore my top course
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-              <button type="button" onClick={downloadSummary} className="btn border border-white/20 text-white hover:bg-white/10">
+              <button
+                type="button"
+                onClick={downloadSummary}
+                disabled={downloading}
+                aria-busy={downloading}
+                className="btn border border-white/20 text-white hover:bg-white/10 disabled:opacity-60"
+              >
                 <Download className="size-4" aria-hidden="true" />
-                Download summary
+                {downloading ? "Preparing PDF…" : "Download PDF summary"}
               </button>
             </div>
+            {downloadFailed && (
+              <p role="alert" className="mt-3 text-[0.75rem] font-semibold text-orange-soft">
+                The PDF could not be generated. Please try again.
+              </p>
+            )}
             <p className="mt-5 max-w-md text-[0.68rem] leading-relaxed text-white/60">
               Recommendations are guidance, not admission guarantees. Eligibility is shown per
               course and must be verified with each institution.
