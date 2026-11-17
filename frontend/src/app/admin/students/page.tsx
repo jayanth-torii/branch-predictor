@@ -49,9 +49,13 @@ export default function AdminStudentsPage() {
 
   function exportCsv() {
     const rows: (string | number)[][] = [
-      ["Name", "Stream", "Class", "Batch", "Assessed on", "Profile", "Top dimension", "Top course", "XP", "Undecided"],
+      // Phone sits beside the name, because the reason to export this sheet
+      // at all is usually to contact the students in it. Records taken before
+      // the field existed export an empty cell rather than breaking the row.
+      ["Name", "Mobile", "Stream", "Class", "Batch", "Assessed on", "Profile", "Top dimension", "Top course", "XP", "Undecided"],
       ...filtered.map((submission) => [
         submission.name,
+        submission.detail?.phone ?? "",
         submission.stream,
         submission.puYear,
         submission.batchCode,

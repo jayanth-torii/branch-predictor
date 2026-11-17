@@ -87,13 +87,25 @@ export const INTEREST_AREAS = [
   "Data & Analytics",
   "People & Communication",
   "Still deciding",
+  /** Reveals a text box. The typed value lands in `Student.interestOther`,
+      and it is the TYPED value — not the word "Other" — that is stored on the
+      submission, because "Other" tells an educator nothing. */
+  "Other",
 ] as const;
 export type InterestArea = (typeof INTEREST_AREAS)[number];
 
 export type Student = {
   name: string;
+  /**
+   * Ten-digit Indian mobile number, stored WITHOUT the +91 and without
+   * spaces or dashes, so two students who typed it differently are still one
+   * contact. Required at onboarding; see `phoneSchema` in the discover page.
+   */
+  phone: string;
   /** Self-declared starting point, captured right after the name. */
   areaOfInterest: InterestArea | "";
+  /** Free text, only meaningful while `areaOfInterest === "Other"`. */
+  interestOther: string;
   stream: Stream | "";
   puYear: PUYear | "";
   /** Approximate current marks. "" until onboarding captures it. */
@@ -322,6 +334,9 @@ export type AnsweredStreamQuestion = {
  */
 export type SubmissionDetail = {
   /** Onboarding answers the summary drops entirely. */
+  phone: string;
+  /** The RESOLVED interest: a preset label, or whatever the student typed
+      under "Other". Never the bare word "Other". */
   areaOfInterest: string;
   marksBand: string;
   language: string;

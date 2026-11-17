@@ -467,6 +467,20 @@ export default function AdminQuestionsPage() {
       {/* ── Stream rounds ───────────────────────────────────────────────── */}
       {!loading && tab !== "core" && (
         <div className="mt-5 space-y-3">
+          {/* These questions are no longer part of the student journey: the
+              quest is the ten stage-1 questions and ends at the results. The
+              bank is kept, editable, and still renders inside the reports of
+              students who sat it before the change — but an edit made here
+              will not reach anybody today. Saying so is cheaper than letting
+              a teacher rewrite 75 questions nobody will answer. */}
+          <p className="flex items-start gap-2 rounded-xl border border-orange/25 bg-orange/10 px-3.5 py-3 text-[0.78rem] font-semibold leading-relaxed text-orange">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>
+              Students no longer sit this round — the quest is the ten stage 1 questions. These
+              are kept for the records of students who answered them earlier, and so the round
+              can be switched back on without retyping it.
+            </span>
+          </p>
           {visible.map((question) => {
             const open = openId === question.id;
             const state = status[question.id] ?? { kind: "idle" };

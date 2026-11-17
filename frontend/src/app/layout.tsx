@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s · Pathora AI",
   },
   description:
-    "A gamified 25-question career discovery experience for PU students. Map your interests, explore 34 non-biology UG courses, and understand why each one fits.",
+    "A gamified 10-question career discovery experience for PU students. Map your interests, explore 34 non-biology UG courses, and understand why each one fits.",
   keywords: [
     "PU career test",
     "UG course recommendation",

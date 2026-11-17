@@ -38,6 +38,7 @@ const batchSchema = new Schema(
  */
 const submissionDetailSchema = new Schema(
   {
+    phone: { type: String, default: "" },
     areaOfInterest: { type: String, default: "" },
     marksBand: { type: String, default: "" },
     language: { type: String, default: "" },

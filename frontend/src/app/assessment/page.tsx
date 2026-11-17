@@ -49,6 +49,7 @@ export default function AssessmentPage() {
   const nextQuestion = usePathora((state) => state.nextQuestion);
   const skipQuestion = usePathora((state) => state.skipQuestion);
   const goToQuestion = usePathora((state) => state.goToQuestion);
+  const finishAssessment = usePathora((state) => state.finishAssessment);
 
   useEffect(() => {
     if (mounted && !student.name) {
@@ -97,14 +98,23 @@ export default function AssessmentPage() {
   }, [question, selectAnswer]);
 
   /**
-   * Stage 1 no longer finishes the assessment. It hands off to the stream round,
-   * which owns `finishAssessment()` — so the result is built once, after both
-   * stages, and never twice.
+   * These ten questions ARE the quest. Stage 1 used to hand off to a stream
+   * subject round which owned `finishAssessment()`; that round is gone, so the
+   * handoff is back here and the last question builds the result directly.
+   *
+   * `finishAssessment()` is called before navigating, not from `/analyzing`:
+   * the analysing screen is a timed animation, and a student who closes the
+   * tab during it must still have a result waiting when they come back.
    */
+  function finishAndAnalyse() {
+    finishAssessment();
+    router.push("/analyzing");
+  }
+
   function handleContinue() {
     if (!question) return;
     if (isLast) {
-      router.push("/assessment/stream");
+      finishAndAnalyse();
       return;
     }
     setBoxOpen(false);
@@ -114,7 +124,7 @@ export default function AssessmentPage() {
   function handleSkip() {
     if (!question) return;
     if (isLast) {
-      router.push("/assessment/stream");
+      finishAndAnalyse();
       return;
     }
     setBoxOpen(false);
@@ -332,7 +342,7 @@ export default function AssessmentPage() {
               disabled={!selected && !isLast}
               className="btn btn-primary flex-1 md:flex-none md:min-w-[190px]"
             >
-              {isLast ? "Continue to stage 2" : selected ? "Continue" : "Choose an answer"}
+              {isLast ? "See my matches" : selected ? "Continue" : "Choose an answer"}
               <ArrowRight className="size-4" aria-hidden="true" />
             </button>
           </div>

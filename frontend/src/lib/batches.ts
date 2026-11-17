@@ -69,7 +69,15 @@ export function submissionFromResult(
     eligibleCourses: result.matches.filter((m) => m.eligible).slice(0, 5).map((m) => m.course.slug),
     interestedCareers: result.topCareers.map((career) => career.slug),
     detail: {
-      areaOfInterest: result.student.areaOfInterest,
+      phone: result.student.phone,
+      /* The RESOLVED interest. A student who picked "Other" and typed
+         "Sports science" is recorded as "Sports science": storing the literal
+         word "Other" would tell the educator reading this report nothing at
+         all, which is the one thing the free-text box exists to prevent. */
+      areaOfInterest:
+        result.student.areaOfInterest === "Other"
+          ? result.student.interestOther.trim()
+          : result.student.areaOfInterest,
       marksBand: result.student.marksBand,
       language: result.student.language,
       completedCount: result.completedCount,

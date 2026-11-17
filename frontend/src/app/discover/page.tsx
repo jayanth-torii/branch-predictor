@@ -21,6 +21,8 @@ import {
   HelpCircle,
   Layers,
   Palette,
+  PencilLine,
+  Phone,
   ShieldCheck,
   Sigma,
   Sparkles,
@@ -33,6 +35,7 @@ import {
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site-footer";
+import { isMobile, normalisePhone } from "@/lib/phone";
 import { usePathora } from "@/lib/store";
 import { QUESTIONS } from "@/lib/questions";
 import { STREAM_QUESTIONS } from "@/lib/stream-questions";
@@ -47,20 +50,54 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const schema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Please enter at least two characters.")
-    .max(40, "That name is a little too long."),
-  areaOfInterest: z.union([z.enum(INTEREST_AREAS), z.literal("")]).optional(),
-  stream: z.enum(STREAMS, { message: "Choose your PU stream to continue." }),
-  puYear: z.enum(["1st PU", "2nd PU"], { message: "Choose your current class." }),
-  // Deliberately optional and never an error case: marks only ever flag a course
-  // as a stretch, so refusing to answer must cost the student nothing.
-  marksBand: z.union([z.enum(MARKS_BANDS), z.literal("")]).optional(),
-  language: z.string().optional(),
-});
+/**
+ * Normalised BEFORE validation rather than after, so `+91 98765 43210`,
+ * `098765-43210` and `9876543210` all become one number instead of three
+ * records for the same student. See `lib/phone.ts` for why the country-code
+ * strip is length-guarded.
+ */
+const phoneSchema = z
+  .string()
+  .trim()
+  .transform(normalisePhone)
+  .refine((value) => value.length > 0, { message: "Please enter your mobile number." })
+  .refine(isMobile, {
+    message: "Enter a 10-digit mobile number starting with 6, 7, 8 or 9.",
+  });
+
+const schema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "Please enter at least two characters.")
+      .max(40, "That name is a little too long."),
+    phone: phoneSchema,
+    areaOfInterest: z.union([z.enum(INTEREST_AREAS), z.literal("")]).optional(),
+    interestOther: z.string().trim().max(40, "Keep this under 40 characters.").optional(),
+    stream: z.enum(STREAMS, { message: "Choose your PU stream to continue." }),
+    puYear: z.enum(["1st PU", "2nd PU"], { message: "Choose your current class." }),
+    // Deliberately optional and never an error case: marks only ever flag a course
+    // as a stretch, so refusing to answer must cost the student nothing.
+    marksBand: z.union([z.enum(MARKS_BANDS), z.literal("")]).optional(),
+    language: z.string().optional(),
+  })
+  /* Picking "Other" and leaving the box empty would store an interest of ""
+     — the same as not answering — so the choice has to be completed. The
+     error is attached to `interestOther` rather than the form root so the
+     handler can scroll to the box that needs filling. */
+  .refine(
+    (data) => data.areaOfInterest !== "Other" || (data.interestOther ?? "").length > 0,
+    { message: "Tell us which area, or pick one from the list.", path: ["interestOther"] },
+  );
+
+/** Fields the submit handler can scroll to and highlight by name. */
+const ERROR_FIELDS = ["name", "phone", "interestOther", "stream", "puYear"] as const;
+type ErrorField = (typeof ERROR_FIELDS)[number] | null;
+
+function isErrorField(value: unknown): value is (typeof ERROR_FIELDS)[number] {
+  return ERROR_FIELDS.includes(value as (typeof ERROR_FIELDS)[number]);
+}
 
 const STREAM_DETAILS: Record<Stream, string> = {
   PCMB: "Physics, Chemistry, Maths, Biology",
@@ -86,6 +123,7 @@ const INTEREST_ICONS: Record<InterestArea, LucideIcon> = {
   "Data & Analytics": BarChart3,
   "People & Communication": Users,
   "Still deciding": HelpCircle,
+  Other: PencilLine,
 };
 
 const LANGUAGES = [
@@ -163,14 +201,18 @@ export default function DiscoverPage() {
   const setStudent = usePathora((state) => state.setStudent);
   const resetAssessment = usePathora((state) => state.resetAssessment);
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [areaOfInterest, setAreaOfInterest] = useState<InterestArea | "">("");
+  const [interestOther, setInterestOther] = useState("");
   const [stream, setStream] = useState<Stream | "">("");
   const [puYear, setPuYear] = useState<PUYear | "">("");
   const [marksBand, setMarksBand] = useState<MarksBand | "">("");
   const [language, setLanguage] = useState("English");
   const [error, setError] = useState<string | null>(null);
-  const [errorField, setErrorField] = useState<"name" | "stream" | "puYear" | null>(null);
+  const [errorField, setErrorField] = useState<ErrorField>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const interestOtherRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<HTMLFieldSetElement>(null);
   const yearRef = useRef<HTMLFieldSetElement>(null);
   const storedStudent = usePathora((state) => state.student);
@@ -183,7 +225,16 @@ export default function DiscoverPage() {
     // `areaOfInterest` used to be missing from this object while the schema
     // declared it optional, so it parsed to undefined and the student's choice
     // was written to the store as "" every single time.
-    const parsed = schema.safeParse({ name, areaOfInterest, stream, puYear, marksBand, language });
+    const parsed = schema.safeParse({
+      name,
+      phone,
+      areaOfInterest,
+      interestOther,
+      stream,
+      puYear,
+      marksBand,
+      language,
+    });
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
       setError(issue?.message ?? "Please complete the form.");
@@ -194,12 +245,12 @@ export default function DiscoverPage() {
       const field = issue?.path[0];
       const target =
         field === "name" ? nameRef.current
+        : field === "phone" ? phoneRef.current
+        : field === "interestOther" ? interestOtherRef.current
         : field === "stream" ? streamRef.current
         : field === "puYear" ? yearRef.current
         : null;
-      setErrorField(
-        field === "name" || field === "stream" || field === "puYear" ? field : null,
-      );
+      setErrorField(isErrorField(field) ? field : null);
       target?.scrollIntoView({ behavior: "smooth", block: "center" });
       if (target instanceof HTMLInputElement) target.focus({ preventScroll: true });
       return;
@@ -208,7 +259,10 @@ export default function DiscoverPage() {
     setErrorField(null);
     setStudent({
       name: parsed.data.name,
+      // The NORMALISED number the schema produced, not the raw keystrokes.
+      phone: parsed.data.phone,
       areaOfInterest: parsed.data.areaOfInterest ?? "",
+      interestOther: parsed.data.interestOther ?? "",
       stream: parsed.data.stream,
       puYear: parsed.data.puYear,
       marksBand: parsed.data.marksBand ?? "",
@@ -392,6 +446,49 @@ export default function DiscoverPage() {
               />
             </div>
 
+            <div className="mt-7">
+              <FieldLabel icon={Phone} htmlFor="phone">
+                Mobile number
+              </FieldLabel>
+              <div className="relative mt-2.5">
+                {/* A fixed, non-editable country code. Typing "+91" yourself is
+                    the most common way this field gets rejected, so the form
+                    supplies it and the schema strips it if it arrives anyway. */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[0.95rem] font-semibold text-slate-ink"
+                >
+                  +91
+                </span>
+                <input
+                  id="phone"
+                  ref={phoneRef}
+                  value={phone}
+                  onChange={(event) => {
+                    setPhone(event.target.value);
+                    if (errorField === "phone") setErrorField(null);
+                  }}
+                  type="tel"
+                  // `numeric`, not `tel`: a tel keypad on Android offers
+                  // `*`, `#` and pauses, none of which belong in a stored number.
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  placeholder="9876543210"
+                  maxLength={18}
+                  aria-invalid={errorField === "phone" || undefined}
+                  aria-describedby={error ? "discover-error" : "phone-hint"}
+                  className={cn(
+                    "w-full rounded-2xl border bg-arctic py-3.5 pl-[3.6rem] pr-4 text-[0.95rem] text-midnight outline-none transition placeholder:text-slate-ink/50 focus:border-orange focus:bg-surface",
+                    errorField === "phone" ? "border-orange bg-peach/50" : "border-midnight/12",
+                  )}
+                />
+              </div>
+              <p id="phone-hint" className="mt-2 text-[0.76rem] leading-relaxed text-slate-ink">
+                So your college can reach you about your result. It is stored with your report and
+                never shown to other students.
+              </p>
+            </div>
+
             {/* Asked right after the name, before stream: a self-declared
                 starting point. Optional, and it never filters the catalogue —
                 the interest profile still comes only from the answers. */}
@@ -407,8 +504,17 @@ export default function DiscoverPage() {
                     <button
                       key={area}
                       type="button"
-                      onClick={() => setAreaOfInterest(active ? "" : area)}
+                      onClick={() => {
+                        setAreaOfInterest(active ? "" : area);
+                        // Deselecting "Other" drops what was typed under it,
+                        // so a stale value cannot be submitted with a
+                        // different interest selected.
+                        if (area === "Other" && active) setInterestOther("");
+                        if (errorField === "interestOther") setErrorField(null);
+                      }}
                       aria-pressed={active}
+                      aria-expanded={area === "Other" ? active : undefined}
+                      aria-controls={area === "Other" ? "interest-other" : undefined}
                       className={cn(
                         option(active),
                         "inline-flex min-h-11 items-center gap-2.5 rounded-full px-4 py-2.5 text-[0.85rem] font-semibold",
@@ -426,6 +532,40 @@ export default function DiscoverPage() {
                   );
                 })}
               </div>
+
+              {/* Revealed by the "Other" chip above. Rendered conditionally
+                  rather than hidden, so it is out of the tab order entirely
+                  when it is not in play — a disabled-but-present input is the
+                  usual way this pattern traps keyboard users. */}
+              {areaOfInterest === "Other" && (
+                <div className="mt-3">
+                  <label htmlFor="interest-other" className="sr-only">
+                    Which area interests you?
+                  </label>
+                  <input
+                    id="interest-other"
+                    ref={interestOtherRef}
+                    value={interestOther}
+                    onChange={(event) => {
+                      setInterestOther(event.target.value);
+                      if (errorField === "interestOther") setErrorField(null);
+                    }}
+                    // The chip is a click, so focusing here on mount lands the
+                    // student in the box they just asked for.
+                    autoFocus
+                    placeholder="e.g. Sports science, Law, Agriculture…"
+                    maxLength={40}
+                    aria-invalid={errorField === "interestOther" || undefined}
+                    className={cn(
+                      "w-full rounded-2xl border bg-arctic px-4 py-3 text-[0.9rem] text-midnight outline-none transition placeholder:text-slate-ink/50 focus:border-orange focus:bg-surface",
+                      errorField === "interestOther"
+                        ? "border-orange bg-peach/50"
+                        : "border-midnight/12",
+                    )}
+                  />
+                </div>
+              )}
+
               <p className="mt-2.5 text-[0.76rem] leading-relaxed text-slate-ink">
                 Just a starting point. Your actual profile comes from the questions, so this never
                 narrows what you get shown.

@@ -33,13 +33,13 @@ const STEPS = [
     kicker: "Start",
     icon: Compass,
     title: "Set your starting point",
-    body: "Name, PU stream and year. No phone number, no email, no account. Thirty seconds, then straight into the game.",
+    body: "Name, mobile number, PU stream and year. No email, no password, no account to create. Thirty seconds, then straight into the game.",
   },
   {
     kicker: "Play",
     icon: Sparkles,
     title: "Play the discovery quest",
-    body: "Ten scenario questions with six paths each, then ten more from your own stream subjects. Every answer adds XP.",
+    body: "Ten scenario questions with six paths each. No right answers, no timer — every answer adds XP and shapes the profile.",
   },
   {
     kicker: "Form",

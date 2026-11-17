@@ -55,6 +55,12 @@ export const batchLookupSchema = z.object({
 const answerMapSchema = z.record(z.string().max(40), z.string().max(40));
 
 const submissionDetailSchema = z.strictObject({
+  /* The client normalises to ten digits before sending. This is a ceiling,
+     not a format check: rejecting a submission outright over a phone number
+     would throw away a completed assessment, and the number is contact
+     detail, never something the app computes with. `max(20)` leaves room for
+     a country code if the form ever takes international numbers. */
+  phone: z.string().max(20).default(""),
   areaOfInterest: z.string().max(60).default(""),
   marksBand: z.string().max(40).default(""),
   language: z.string().max(40).default(""),

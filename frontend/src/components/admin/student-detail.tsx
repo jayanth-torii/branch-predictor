@@ -18,7 +18,9 @@ import { cn } from "@/lib/utils";
 
 const QUESTION_BY_ID = Object.fromEntries(QUESTIONS.map((q) => [q.id, q]));
 
-function Field({ label, value }: { label: string; value: string }) {
+/** `value` is a node, not just a string, so a field can render a `tel:` link.
+    An empty string is still falsy, so the em-dash fallback is unchanged. */
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <p className="text-[0.58rem] font-bold uppercase tracking-wide text-slate-ink">{label}</p>
@@ -117,6 +119,25 @@ export function StudentDetail({ submission }: { submission: Submission }) {
       )}
       <Heading>Onboarding &amp; narrative</Heading>
       <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* A tappable number: this report is read on a phone as often as a
+            laptop, and the one thing an educator wants to do with it is call.
+            Stored as ten bare digits, so the +91 is added for dialling only.
+            Records taken before the field existed render the usual dash. */}
+        <Field
+          label="Mobile"
+          value={
+            detail.phone ? (
+              <a
+                href={`tel:+91${detail.phone}`}
+                className="font-semibold text-orange hover:underline"
+              >
+                +91 {detail.phone}
+              </a>
+            ) : (
+              ""
+            )
+          }
+        />
         <Field label="Area of interest" value={detail.areaOfInterest} />
         <Field label="Marks band" value={detail.marksBand} />
         <Field label="Preferred language" value={detail.language} />

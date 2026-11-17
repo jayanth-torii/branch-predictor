@@ -49,8 +49,7 @@ const COLUMNS: {
     title: "Explore",
     links: [
       { href: "/courses", label: "All UG courses", icon: GraduationCap },
-      { href: "/compare", label: "Compare pathways", icon: Layers },
-      { href: "/mentor", label: "Career mentor", icon: Compass },
+      { href: "/discover", label: "Take the quest", icon: Compass },
       { href: "/results", label: "My results", icon: BarChart3 },
     ],
   },

@@ -116,7 +116,7 @@ function JoinBatchContent() {
               </h1>
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/65">
                 {batch
-                  ? `${batch.institution} · ${batch.capacity} seats. Your anonymous result will contribute to this batch's aggregate career-interest dashboard.`
+                  ? `${batch.institution} · ${batch.capacity} seats. Your result joins this batch's career-interest dashboard, which opens on totals — your name and number are visible to your institution's staff, not to other students.`
                   : "This code is not in the local demo list, but it will still be attached to your result so you can see how batch analytics work."}
               </p>
             </div>

@@ -236,25 +236,22 @@ export default function ResultsPage() {
 
         {/* Stage 2 recap. Deliberately NO tally: the product rule is that the
             student never sees a score. The trail shows which ideas landed and
-            which are worth a second look, which is feedback, not a grade. */}
+            which are worth a second look, which is feedback, not a grade.
+
+            This now only ever renders for a result saved BEFORE the subject
+            round was taken out of the quest — a new run carries no
+            `streamQuiz` at all. The block is kept so those students still see
+            what they did rather than having it quietly deleted, and the
+            "play it again" button is gone with the route it pointed at. */}
         {result.streamQuiz && result.streamQuiz.total > 0 && (
           <Reveal className="mt-4">
-            <div className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-              <div className="min-w-0">
-                <p className="eyebrow">Your {result.student.stream || "stream"} round</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-ink">
-                  You worked through {result.streamQuiz.total} subject questions. The ones without a
-                  tick are just topics worth a second look — they changed nothing about the matches
-                  below.
-                </p>
-              </div>
-              <Link
-                href="/assessment/stream"
-                className="btn btn-ghost shrink-0 !py-2.5 !text-xs"
-              >
-                Play the round again
-                <ArrowRight className="size-3.5" aria-hidden="true" />
-              </Link>
+            <div className="card p-5">
+              <p className="eyebrow">Your {result.student.stream || "stream"} round</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-ink">
+                You worked through {result.streamQuiz.total} subject questions on an earlier run.
+                They changed nothing about the matches below, and the quest is now the ten
+                scenario questions on their own.
+              </p>
             </div>
           </Reveal>
         )}
@@ -262,17 +259,9 @@ export default function ResultsPage() {
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <Reveal>
             <div className="card p-6 sm:p-7">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="eyebrow">How your profile reads</p>
-                  <h2 className="display mt-2 text-xl text-midnight">Six dimensions, one shape</h2>
-                </div>
-                <Link
-                  href="/mentor"
-                  className="inline-flex min-h-11 shrink-0 items-center text-xs font-bold text-orange hover:underline md:min-h-0"
-                >
-                  Ask why
-                </Link>
+              <div>
+                <p className="eyebrow">How your profile reads</p>
+                <h2 className="display mt-2 text-xl text-midnight">Six dimensions, one shape</h2>
               </div>
               <div className="mt-5">
                 <DimensionBars profile={result.profile} />
@@ -308,10 +297,10 @@ export default function ResultsPage() {
                 </div>
               </div>
               <Link
-                href="/compare"
+                href="/courses"
                 className="inline-flex min-h-11 items-center gap-1.5 text-xs font-bold text-orange hover:underline md:min-h-0"
               >
-                Compare two of your matches
+                Browse every course
                 <ArrowUpRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -516,31 +505,23 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        <div className="mt-10">
           <Reveal>
-            <div className="card h-full p-6">
-              <p className="eyebrow">What-if mode</p>
-              <h3 className="display mt-2 text-xl text-midnight">Two futures, side by side.</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-ink">
-                Compare duration, eligibility, skill demands and career routes before you commit to a
-                direction.
+            <div className="card p-6">
+              <p className="eyebrow">Read the detail</p>
+              <h3 className="display mt-2 text-xl text-midnight">
+                Every match opens up.
+              </h3>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-ink">
+                {top?.course.name ?? "Each course"} has its own page: duration, eligibility, the
+                skills it builds and the careers it leads to — alongside the reason it ranked where
+                it did for you.
               </p>
-              <Link href="/compare" className="btn btn-dark mt-5 !py-2.5 !text-xs">
-                Open comparison
-                <ArrowRight className="size-3.5" aria-hidden="true" />
-              </Link>
-            </div>
-          </Reveal>
-          <Reveal delay={0.06}>
-            <div className="card h-full p-6">
-              <p className="eyebrow">Career mentor</p>
-              <h3 className="display mt-2 text-xl text-midnight">Ask a specific question.</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-ink">
-                “Why was {top?.course.name ?? "this course"} recommended?” or “What if I choose BBA
-                instead?” Answers come from your profile and the catalog.
-              </p>
-              <Link href="/mentor" className="btn btn-ghost mt-5 !py-2.5 !text-xs">
-                Talk to the mentor
+              <Link
+                href={top ? `/courses/${top.course.slug}` : "/courses"}
+                className="btn btn-dark mt-5 !py-2.5 !text-xs"
+              >
+                {top ? `Open ${top.course.short}` : "Browse all courses"}
                 <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -574,7 +555,7 @@ export default function ResultsPage() {
               </h2>
               <p className="mt-2 max-w-xl text-sm text-slate-ink">
                 {result.batchCode
-                  ? `Your anonymous result contributes to batch ${result.batchCode}. Trainers see aggregates by default.`
+                  ? `Your result contributes to batch ${result.batchCode}. The dashboard opens on totals, and your own report is visible to your institution's staff.`
                   : "Join a batch code from your college to contribute to aggregated batch analytics (optional)."}
               </p>
             </div>

@@ -8,7 +8,6 @@ import {
   interestDistribution,
 } from "./batches";
 import { QUESTIONS } from "./questions";
-import { summariseStreamQuiz } from "./stream-questions";
 import { apiErrorMessage, createSubmission } from "./api";
 import { buildResult } from "./scoring";
 import { newRunSeed } from "./shuffle";
@@ -37,7 +36,15 @@ type PathoraState = {
   currentIndex: number;
   xp: number;
   /** Stage 2 (stream quiz) state. Kept separate from `answers` so the interest
-      profile can never be computed from a right/wrong question. */
+      profile can never be computed from a right/wrong question.
+
+      DORMANT: the student journey is the ten core questions only, so nothing
+      writes these any more — `/assessment/stream` is gone and
+      `finishAssessment` no longer reads them. The slice is kept rather than
+      deleted because the question bank, the admin editor and every stored
+      stage 2 are all still here: bringing the round back is one page file and
+      one `router.push`, and `attachResultToBatch` below still needs
+      `activeStreamBank` to re-serialise a result saved before the change. */
   streamAnswers: Record<string, string>;
   streamIndex: number;
   result: AssessmentResult | null;
@@ -87,7 +94,9 @@ type PathoraState = {
 
 const initialStudent: Student = {
   name: "",
+  phone: "",
   areaOfInterest: "",
+  interestOther: "",
   stream: "",
   puYear: "",
   marksBand: "",
@@ -209,19 +218,26 @@ export const usePathora = create<PathoraState>()(
         })),
 
       finishAssessment: () => {
-        const { student, answers, xp, apiBase, streamAnswers, activeCoreBank, activeStreamBank } =
-          get();
-        // Stage 2 is attached to the result for display only. It is computed
-        // AFTER buildResult so it cannot reach the profile or the ranking.
-        const result = {
-          ...buildResult(student, answers, xp, activeCoreBank ?? QUESTIONS),
-          streamQuiz: summariseStreamQuiz(student.stream, streamAnswers, activeStreamBank ?? undefined),
-        };
+        const { student, answers, xp, apiBase, activeCoreBank } = get();
+        /* The quest is the ten core questions, and it ends here.
+
+           Stage 2 — the stream subject round — used to run between stage 1 and
+           this call, and attached a `streamQuiz` summary to the result for
+           display. It no longer runs, so the result carries no `streamQuiz` at
+           all. That is deliberately an ABSENT field rather than a zeroed one:
+           every render site already guards on it (`results/page.tsx`,
+           `admin/student-detail.tsx`, `batches.ts`), and a `{correctCount: 0,
+           total: 15}` would have them all truthfully report that the student
+           scored nothing out of fifteen.
+
+           Submissions recorded before this change keep their stage 2 and still
+           render it — those students really did sit it, and the dashboard
+           should not rewrite their history. */
+        const result = buildResult(student, answers, xp, activeCoreBank ?? QUESTIONS);
         const submission = submissionFromResult(
           result,
           student.batchCode ?? "",
           activeCoreBank ?? QUESTIONS,
-          activeStreamBank ?? undefined,
         );
         const isSampleOnly = !student.batchCode;
         set((state) => ({

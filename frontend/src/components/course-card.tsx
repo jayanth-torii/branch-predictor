@@ -162,19 +162,16 @@ export function CourseCard({
             </p>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2.5">
+          {/* One action, full width. This row carried a second "Compare"
+              button; with comparison gone the remaining link takes the whole
+              row rather than leaving a gap where the pair used to sit. */}
+          <div className="mt-4">
             <Link
               href={`/courses/${course.slug}`}
-              className="btn-primary inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full px-4 text-[0.82rem] font-bold transition"
+              className="btn-primary inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[0.82rem] font-bold transition"
             >
               Explore this course
               <ArrowUpRight className="size-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href={`/compare?with=${course.slug}`}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-midnight/12 bg-surface px-5 text-[0.82rem] font-bold text-midnight transition hover:border-orange/50 hover:text-orange"
-            >
-              Compare
             </Link>
           </div>
         </div>

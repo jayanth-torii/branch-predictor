@@ -40,14 +40,28 @@ const BUNDLED: Pick<QuestionBank, "core" | "stream"> = {
  * server's version ignored — a broken edit must not be able to take the
  * assessment down.
  */
+function sound(question: { title?: string; options?: unknown }): boolean {
+  return Boolean(
+    question.title && Array.isArray(question.options) && question.options.length >= 2,
+  );
+}
+
 function usable(core: Question[], stream: Record<string, StreamQuestion[]>): boolean {
   if (core.length === 0) return false;
-  if (core.some((q) => !q.title || !Array.isArray(q.options) || q.options.length < 2)) return false;
-  const anyStream = Object.values(stream).some((list) => list.length > 0);
-  if (!anyStream) return false;
-  return !Object.values(stream)
-    .flat()
-    .some((q) => !q.title || !Array.isArray(q.options) || q.options.length < 2);
+  if (!core.every(sound)) return false;
+
+  /* The stream bank no longer vetoes anything by being EMPTY.
+
+     It used to: `if (!anyStream) return false` rejected the server's whole
+     response when no stream questions came back. That was right while stage 2
+     was part of the quest — half a quest is worse than none. It is wrong now
+     that the student only sits the ten core questions, because it would mean
+     a database holding perfectly good stage 1 edits gets ignored in favour of
+     the bundled bank, and staff edits would silently stop appearing.
+
+     Malformed stream questions are still rejected, so a half-written round
+     cannot be served if the round is ever switched back on. */
+  return Object.values(stream).flat().every(sound);
 }
 
 export function useQuestionBank(): QuestionBank {

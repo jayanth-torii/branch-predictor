@@ -390,85 +390,7 @@ function JourneyPreview() {
   );
 }
 
-/* ── 4. What-if comparison ─────────────────────────────────────────────── */
-
-const COMPARE_ROWS = [
-  { label: "Duration", a: "3 years", b: "4 years" },
-  { label: "Entry", a: "Maths at 10+2", b: "PCM + entrance" },
-  { label: "Skill one", a: "Web development", b: "Algorithms" },
-];
-
-function ComparePreview() {
-  const { ref, reduced, state } = usePreview();
-
-  return (
-    <motion.div
-      ref={ref}
-      className="card relative overflow-hidden p-4 sm:p-6"
-      variants={stage}
-      initial={reduced ? false : "hidden"}
-      animate={state}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">What-if mode</p>
-        <span className="chip chip-xs !px-2.5 !py-1">Side by side</span>
-      </div>
-
-      <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-2.5 sm:gap-x-3">
-        {/* The two options slide in from their own sides and meet at the VS. */}
-        <motion.div variants={shiftIn(-18)} className="rounded-xl bg-surface-2 px-2.5 py-2 text-center sm:px-3">
-          <p className="display text-[0.95rem] leading-none text-midnight">BCA</p>
-          <p className="mt-1 text-[0.58rem] leading-tight text-slate-ink">Computer Applications</p>
-        </motion.div>
-        <motion.span
-          variants={pop}
-          className="grid size-7 place-items-center rounded-full bg-orange text-[0.56rem] font-bold uppercase tracking-wide text-white"
-        >
-          vs
-        </motion.span>
-        <motion.div variants={shiftIn(18)} className="rounded-xl bg-surface-2 px-2.5 py-2 text-center sm:px-3">
-          <p className="display text-[0.95rem] leading-none text-midnight">B.Tech CSE</p>
-          <p className="mt-1 text-[0.58rem] leading-tight text-slate-ink">Computer Sci. &amp; Engg.</p>
-        </motion.div>
-
-        {COMPARE_ROWS.map((row) => (
-          <motion.div
-            key={row.label}
-            variants={riseIn}
-            className="col-span-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 border-t border-midnight/[0.07] pt-2.5 sm:gap-x-3"
-          >
-            <p className="truncate text-center text-[0.66rem] font-semibold text-midnight">{row.a}</p>
-            <p className="w-16 shrink-0 text-center text-[0.56rem] font-bold uppercase tracking-[0.12em] text-slate-ink">
-              {row.label}
-            </p>
-            <p className="truncate text-center text-[0.66rem] font-semibold text-midnight">{row.b}</p>
-          </motion.div>
-        ))}
-
-        {/* Labels only. The product never shows a percentage match. */}
-        <motion.span
-          variants={pop}
-          className="col-start-1 rounded-full border border-orange/25 bg-peach px-1.5 py-1 text-center text-[0.56rem] font-bold uppercase tracking-wide text-orange"
-        >
-          Strong Match
-        </motion.span>
-        <span aria-hidden="true" />
-        <motion.span
-          variants={pop}
-          className="col-start-3 rounded-full border border-midnight/10 bg-fog px-1.5 py-1 text-center text-[0.56rem] font-bold uppercase tracking-wide text-indigo"
-        >
-          Explore Further
-        </motion.span>
-      </div>
-
-      <p className="mt-4 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-slate-ink">
-        Illustrative · the label is relative fit, never a score
-      </p>
-    </motion.div>
-  );
-}
-
-/* ── Band shell ────────────────────────────────────────────────────────── */
+/* ── Band shell ────────────────────────────────────────────────────────────────── */
 
 function Band({
   index,
@@ -530,7 +452,7 @@ export function AfterRevealSection() {
           <SectionHeading
             eyebrow="After the reveal"
             title="The result is a map, not a verdict."
-            description={`${CAREERS.length} career pages, interactive pathways and side-by-side comparisons — so the assessment becomes a starting point you can keep using. Here is what the four screens actually do.`}
+            description={`${CAREERS.length} career pages, an interest radar that moves while you answer, and a journey map from PU to career — so the assessment becomes a starting point you can keep using. Here is what the three screens actually do.`}
           />
         </Reveal>
 
@@ -561,15 +483,6 @@ export function AfterRevealSection() {
             href="/courses"
             cta="Browse UG courses"
             preview={<JourneyPreview />}
-          />
-          <Band
-            index={3}
-            label="What-if comparison"
-            title="What if I choose BCA instead of B.Tech?"
-            body="Put two courses next to each other and compare duration, eligibility, skills and career routes honestly — including where they genuinely split. Fit is shown as a label, never a score."
-            href="/compare"
-            cta="Open what-if mode"
-            preview={<ComparePreview />}
           />
         </div>
       </div>

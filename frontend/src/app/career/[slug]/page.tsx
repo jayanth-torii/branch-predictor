@@ -177,8 +177,8 @@ function CareerContent() {
               Career outcomes are not guaranteed by a course. Treat this as a map of typical routes,
               not a promise of employment.
             </p>
-            <Link href="/mentor" className="btn btn-primary mt-5 w-full !py-2.5 !text-xs">
-              Ask about this path
+            <Link href="/courses" className="btn btn-primary mt-5 w-full !py-2.5 !text-xs">
+              Courses that lead here
               <ArrowRight className="size-3.5" aria-hidden="true" />
             </Link>
           </div>

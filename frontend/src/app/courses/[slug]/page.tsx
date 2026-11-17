@@ -156,11 +156,8 @@ function CourseDetailContent() {
                   </dd>
                 </div>
               </dl>
-              <Link
-                href={`/compare?with=${course.slug}&against=${course.related[0] ?? ""}`}
-                className="btn btn-dark mt-4 w-full !py-2.5 !text-xs"
-              >
-                Compare this course
+              <Link href="/courses" className="btn btn-dark mt-4 w-full !py-2.5 !text-xs">
+                Browse related courses
                 <ArrowUpRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -406,19 +403,19 @@ function CourseDetailContent() {
             <div className="card-dark p-5">
               <p className="eyebrow text-orange-soft">Not sure yet?</p>
               <p className="mt-2 text-sm leading-relaxed text-white/75">
-                Ask the mentor why this course did or did not appear in your matches, or compare it
-                against another direction.
+                Ten questions build an interest profile, and every course is then ranked against it
+                with the reasoning shown — including why this one did or did not reach your list.
               </p>
               <div className="mt-4 flex flex-col gap-2">
-                <Link href="/mentor" className="btn btn-primary w-full !py-2.5 !text-xs">
-                  Ask the mentor
+                <Link href="/discover" className="btn btn-primary w-full !py-2.5 !text-xs">
+                  Take the quest
                   <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
                 <Link
-                  href={`/compare?with=${course.slug}`}
+                  href="/results"
                   className="btn w-full border border-white/20 !py-2.5 !text-xs text-white hover:bg-white/10"
                 >
-                  Compare with another course
+                  See my matches
                 </Link>
               </div>
             </div>
