@@ -36,7 +36,7 @@ import { Logo } from "@/components/logo";
    ══════════════════════════════════════════════════════════════════════════ */
 
 const STATS: { icon: LucideIcon; title: string; sub: string }[] = [
-  { icon: Zap, title: "25 Questions", sub: "Quick and focused" },
+  { icon: Zap, title: "10 Questions", sub: "Quick and focused" },
   { icon: Layers, title: "6 Interest Dimensions", sub: "A well-rounded view" },
   { icon: Target, title: "Explainable Matches", sub: "Know the 'why' behind it" },
 ];
@@ -103,7 +103,7 @@ export function SiteFooter() {
               </span>
 
               <h2 className="display mt-5 text-[1.9rem] leading-[1.1] text-balance text-midnight sm:text-[2.65rem]">
-                Twenty-five questions. One honest map of{" "}
+                Ten questions. One honest map of{" "}
                 <span className="relative inline-block whitespace-nowrap text-orange">
                   what fits you.
                   <svg
@@ -201,7 +201,7 @@ export function SiteFooter() {
             <motion.div {...rise(0.04)} className="col-span-2 max-w-sm md:col-span-1">
               <Logo />
               <p className="mt-5 text-[0.9rem] leading-relaxed text-slate-ink">
-                A gamified career discovery experience for PU students. Twenty-five questions, six
+                A gamified career discovery experience for PU students. Ten questions, six
                 interest dimensions, and an explainable course map — not a fortune teller.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">

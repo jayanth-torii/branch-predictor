@@ -44,7 +44,7 @@ function safeFilename(value: string): string {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 48) || "pathora-report"
+      .slice(0, 48) || "branch-predictor-report"
   );
 }
 
@@ -77,7 +77,7 @@ function drawHeader(doc: jsPDF, label: string, title: string, subtitle: string):
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(...WHITE);
-  doc.text("PATHORA AI", 76, 36);
+  doc.text("BRANCH PREDICTOR", 76, 36);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(185, 196, 220);
@@ -116,7 +116,7 @@ function drawContinuationHeader(doc: jsPDF, label: string): void {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...WHITE);
-  doc.text(`PATHORA AI  ·  ${label.toUpperCase()}`, MARGIN + 18, 22);
+  doc.text(`BRANCH PREDICTOR  ·  ${label.toUpperCase()}`, MARGIN + 18, 22);
 }
 
 function heading(doc: jsPDF, y: number, kicker: string, title: string): number {
@@ -162,9 +162,19 @@ function drawKpis(doc: jsPDF, y: number, items: { label: string; value: string }
     doc.setFontSize(6);
     doc.setTextColor(...INK);
     doc.text(item.label.toUpperCase(), x + 10, y + 18);
-    doc.setFontSize(item.value.length > 14 ? 11 : 15);
     doc.setTextColor(...MIDNIGHT);
-    doc.text(clean(item.value), x + 10, y + 42, { maxWidth: boxWidth - 18 });
+    /* Step the size down until the value MEASURES as fitting, rather than
+       guessing from character count. "Communication" is thirteen characters
+       and broke across two lines at the old fixed 15pt. */
+    const value = clean(item.value);
+    const room = boxWidth - 20;
+    let size = 15;
+    doc.setFontSize(size);
+    while (size > 8 && doc.getTextWidth(value) > room) {
+      size -= 0.5;
+      doc.setFontSize(size);
+    }
+    doc.text(value, x + 10, y + 42, { maxWidth: room });
   });
   return y + 58;
 }
@@ -348,7 +358,7 @@ export async function downloadBatchReportPdf(
     "Guidance only. Course recommendations are not admission guarantees. Eligibility, cut-offs, entrance exams and deadlines vary by institution and year and must be verified directly.",
   );
   drawFooter(doc, "Branch Predictor  ·  Aggregated batch report  ·  Guidance, not admission advice");
-  doc.save(`pathora-batch-${safeFilename(batch.code)}.pdf`);
+  doc.save(`branch-predictor-batch-${safeFilename(batch.code)}.pdf`);
 }
 
 export async function downloadStudentProfilePdf(submission: Submission): Promise<void> {

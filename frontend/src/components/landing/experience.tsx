@@ -387,7 +387,7 @@ function PinnedNarrative() {
           <div className="min-w-0">
             <p className="eyebrow">The experience</p>
             <h2 className="display mt-2 text-[1.9rem] leading-[1.05] text-balance text-midnight lg:text-[2.5rem]">
-              Twenty-five questions that feel like a game, not an admission form.
+              Ten questions that feel like a game, not an admission form.
             </h2>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-ink">
               No timer. No pass mark. Skipping a question is allowed — the point is to notice
@@ -478,7 +478,7 @@ function JourneyRail({ reduced }: { reduced: boolean }) {
     <div className="mx-auto w-full max-w-2xl px-5 py-14 sm:px-8 sm:py-20">
       <p className="eyebrow">The experience</p>
       <h2 className="display mt-2 text-[1.75rem] leading-[1.08] text-balance text-midnight sm:text-[2.2rem]">
-        Twenty-five questions that feel like a game, not an admission form.
+        Ten questions that feel like a game, not an admission form.
       </h2>
       <p className="mt-3 text-sm leading-relaxed text-slate-ink">
         No timer. No pass mark. Skipping a question is allowed — the point is to notice what you

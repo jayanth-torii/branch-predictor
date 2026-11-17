@@ -99,7 +99,7 @@ export function Hero({ courseCount }: { courseCount: number }) {
             <Sparkles className="size-4 text-orange" aria-hidden="true" />
             Built for PU Students
             <Dot />
-            {courseCount >= 0 ? "25 Questions" : ""}
+            {courseCount >= 0 ? "10 Questions" : ""}
             <Dot />
             No Timer
           </span>

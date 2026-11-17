@@ -28,7 +28,7 @@ export default function AdminAnalyticsPage() {
   })).sort((a, b) => b.count - a.count);
 
   function exportAnalytics() {
-    downloadCsv("pathora-batch-analytics.csv", [
+    downloadCsv("branch-predictor-batch-analytics.csv", [
       ["Interest distribution", "Students", "% of records"],
       ...distribution.map((entry) => [
         DIMENSION_META[entry.dimension].label,
