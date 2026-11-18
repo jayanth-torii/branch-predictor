@@ -12,6 +12,9 @@ import {
 import { Compass, Layers, Sparkles, Target } from "lucide-react";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { QUESTIONS } from "@/lib/questions";
+import { DIMENSIONS } from "@/lib/types";
+import { capitalise, spellNumber } from "@/lib/utils";
 
 /**
  * THE EXPERIENCE — scroll-driven sticky narrative.
@@ -39,13 +42,13 @@ const STEPS = [
     kicker: "Play",
     icon: Sparkles,
     title: "Play the discovery quest",
-    body: "Ten scenario questions with six paths each. No right answers, no timer — every answer adds XP and shapes the profile.",
+    body: `${capitalise(spellNumber(QUESTIONS.length))} scenario questions with ${spellNumber(QUESTIONS[0]?.options.length ?? 6)} paths each. No right answers, no timer — every answer adds XP and shapes the profile.`,
   },
   {
     kicker: "Form",
     icon: Layers,
     title: "Watch your profile form",
-    body: "A live radar tracks six dimensions while you play. Your answers become a career personality, not a score out of ten.",
+    body: `A live radar tracks ${spellNumber(DIMENSIONS.length)} dimensions while you play. Your answers become a career personality, not a score out of ten.`,
   },
   {
     kicker: "Match",
@@ -387,7 +390,8 @@ function PinnedNarrative() {
           <div className="min-w-0">
             <p className="eyebrow">The experience</p>
             <h2 className="display mt-2 text-[1.9rem] leading-[1.05] text-balance text-midnight lg:text-[2.5rem]">
-              Ten questions that feel like a game, not an admission form.
+              {capitalise(spellNumber(QUESTIONS.length))} questions that feel like a game,
+              not an admission form.
             </h2>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-ink">
               No timer. No pass mark. Skipping a question is allowed — the point is to notice
@@ -478,7 +482,8 @@ function JourneyRail({ reduced }: { reduced: boolean }) {
     <div className="mx-auto w-full max-w-2xl px-5 py-14 sm:px-8 sm:py-20">
       <p className="eyebrow">The experience</p>
       <h2 className="display mt-2 text-[1.75rem] leading-[1.08] text-balance text-midnight sm:text-[2.2rem]">
-        Ten questions that feel like a game, not an admission form.
+        {capitalise(spellNumber(QUESTIONS.length))} questions that feel like a game, not an
+        admission form.
       </h2>
       <p className="mt-3 text-sm leading-relaxed text-slate-ink">
         No timer. No pass mark. Skipping a question is allowed — the point is to notice what you

@@ -28,7 +28,9 @@ import { useHydrated } from "@/lib/client-hooks";
 import { SiteFooter } from "@/components/site-footer";
 import { usePathora } from "@/lib/store";
 import { DIMENSION_META } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { DIMENSIONS } from "@/lib/types";
+import { QUESTIONS } from "@/lib/questions";
+import { capitalise, cn, spellNumber } from "@/lib/utils";
 
 export default function ResultsPage() {
   const mounted = useHydrated();
@@ -51,7 +53,7 @@ export default function ResultsPage() {
       <main className="mx-auto w-full max-w-3xl px-5 py-20 sm:px-8">
         <EmptyState
           title="No profile yet"
-          description="Your results appear here after the quest: ten questions about what kind of work pulls you in. It takes a few minutes, and you can skip any question you do not connect with."
+          description={`Your results appear here after the quest: ${spellNumber(QUESTIONS.length)} questions about what kind of work pulls you in. It takes a few minutes, and you can skip any question you do not connect with.`}
         >
           <Link href="/discover" className="btn btn-primary mt-2">
             Start the assessment
@@ -270,7 +272,9 @@ export default function ResultsPage() {
             <div className="card p-6 sm:p-7">
               <div>
                 <p className="eyebrow">How your profile reads</p>
-                <h2 className="display mt-2 text-xl text-midnight">Six dimensions, one shape</h2>
+                <h2 className="display mt-2 text-xl text-midnight">
+                  {capitalise(spellNumber(DIMENSIONS.length))} dimensions, one shape
+                </h2>
               </div>
               <div className="mt-5">
                 <DimensionBars profile={result.profile} />

@@ -21,6 +21,7 @@ import {
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState, type CSSProperties } from "react";
+import { QUESTIONS } from "@/lib/questions";
 
 /* ══════════════════════════════════════════════════════════════════════════
    HERO — built to the supplied reference.
@@ -99,7 +100,7 @@ export function Hero({ courseCount }: { courseCount: number }) {
             <Sparkles className="size-4 text-orange" aria-hidden="true" />
             Built for PU Students
             <Dot />
-            {courseCount >= 0 ? "10 Questions" : ""}
+            {courseCount >= 0 ? `${QUESTIONS.length} Questions` : ""}
             <Dot />
             No Timer
           </span>

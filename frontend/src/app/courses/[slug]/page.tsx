@@ -25,7 +25,8 @@ import { CAREER_BY_SLUG } from "@/lib/careers";
 import { DIMENSIONS, DIMENSION_META, STREAMS } from "@/lib/types";
 import { matchTone } from "@/lib/scoring";
 import { usePathora } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import { capitalise, cn, spellNumber } from "@/lib/utils";
+import { QUESTIONS } from "@/lib/questions";
 
 export default function CourseDetailPage() {
   return (
@@ -403,7 +404,8 @@ function CourseDetailContent() {
             <div className="card-dark p-5">
               <p className="eyebrow text-orange-soft">Not sure yet?</p>
               <p className="mt-2 text-sm leading-relaxed text-white/75">
-                Ten questions build an interest profile, and every course is then ranked against it
+                {capitalise(spellNumber(QUESTIONS.length))} questions build an interest profile, and every course is then ranked
+                against it
                 with the reasoning shown — including why this one did or did not reach your list.
               </p>
               <div className="mt-4 flex flex-col gap-2">

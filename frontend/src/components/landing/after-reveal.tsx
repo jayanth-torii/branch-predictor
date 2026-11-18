@@ -7,6 +7,7 @@ import { ArrowUpRight, Sparkles } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/ui";
 import { CAREERS } from "@/lib/careers";
 import { DIMENSIONS, DIMENSION_META, type Dimension } from "@/lib/types";
+import { capitalise, listPhrase, spellNumber } from "@/lib/utils";
 
 /* ══════════════════════════════════════════════════════════════════════════
    AFTER THE REVEAL — showcase bands.
@@ -470,7 +471,7 @@ export function AfterRevealSection() {
             index={1}
             label="Living interest radar"
             title="Watch the profile form while you answer."
-            body="Six interest dimensions — technology, creativity, engineering, business, communication and analytical — reshape with every answer, so you can see what is pulling your direction instead of waiting for a verdict at the end."
+            body={`${capitalise(spellNumber(DIMENSIONS.length))} interest dimensions — ${listPhrase(DIMENSIONS.map((d) => DIMENSION_META[d].short.toLowerCase()))} — reshape with every answer, so you can see what is pulling your direction instead of waiting for a verdict at the end.`}
             href="/discover"
             cta="Start the assessment"
             preview={<RadarPreview />}

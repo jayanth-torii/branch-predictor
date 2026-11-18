@@ -22,6 +22,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { QUESTIONS } from "@/lib/questions";
+import { DIMENSIONS } from "@/lib/types";
+import { capitalise, spellNumber } from "@/lib/utils";
 
 /* ══════════════════════════════════════════════════════════════════════════
    The closing CTA and the footer are two different bands.
@@ -36,8 +39,8 @@ import { Logo } from "@/components/logo";
    ══════════════════════════════════════════════════════════════════════════ */
 
 const STATS: { icon: LucideIcon; title: string; sub: string }[] = [
-  { icon: Zap, title: "10 Questions", sub: "Quick and focused" },
-  { icon: Layers, title: "6 Interest Dimensions", sub: "A well-rounded view" },
+  { icon: Zap, title: `${QUESTIONS.length} Questions`, sub: "Quick and focused" },
+  { icon: Layers, title: `${DIMENSIONS.length} Interest Dimensions`, sub: "A well-rounded view" },
   { icon: Target, title: "Explainable Matches", sub: "Know the 'why' behind it" },
 ];
 
@@ -103,7 +106,7 @@ export function SiteFooter() {
               </span>
 
               <h2 className="display mt-5 text-[1.9rem] leading-[1.1] text-balance text-midnight sm:text-[2.65rem]">
-                Ten questions. One honest map of{" "}
+                {capitalise(spellNumber(QUESTIONS.length))} questions. One honest map of{" "}
                 <span className="relative inline-block whitespace-nowrap text-orange">
                   what fits you.
                   <svg
@@ -124,8 +127,8 @@ export function SiteFooter() {
               </h2>
 
               <p className="mt-5 max-w-md text-[0.97rem] leading-relaxed text-slate-ink">
-                No fortune telling, no rankings to memorise — six interest dimensions and a course
-                map you can argue with.
+                No fortune telling, no rankings to memorise — {spellNumber(DIMENSIONS.length)} interest
+                dimensions and a course map you can argue with.
               </p>
 
               <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
@@ -201,13 +204,14 @@ export function SiteFooter() {
             <motion.div {...rise(0.04)} className="col-span-2 max-w-sm md:col-span-1">
               <Logo />
               <p className="mt-5 text-[0.9rem] leading-relaxed text-slate-ink">
-                A gamified career discovery experience for PU students. Ten questions, six
-                interest dimensions, and an explainable course map — not a fortune teller.
+                A gamified career discovery experience for PU students.{" "}
+                {capitalise(spellNumber(QUESTIONS.length))} questions, {spellNumber(DIMENSIONS.length)} interest
+                dimensions, and an explainable course map — not a fortune teller.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <span className="chip chip-xs">
                   <Users className="size-3.5 text-orange" aria-hidden="true" />
-                  6 Interest Dimensions
+                  {DIMENSIONS.length} Interest Dimensions
                 </span>
                 <span className="chip chip-xs">
                   <BarChart3 className="size-3.5 text-orange" aria-hidden="true" />
