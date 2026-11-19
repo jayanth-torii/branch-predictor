@@ -92,6 +92,22 @@ type PathoraState = {
   setApiBase: (base: string | null) => void;
 };
 
+/**
+ * Exactly what survives a reload: the student's own run, and nothing the
+ * server owns. See `partialize` at the bottom of this file for why.
+ */
+type PersistedSlice = Pick<
+  PathoraState,
+  | "student"
+  | "answers"
+  | "currentIndex"
+  | "xp"
+  | "streamAnswers"
+  | "streamIndex"
+  | "result"
+  | "runSeed"
+>;
+
 const initialStudent: Student = {
   name: "",
   phone: "",
@@ -316,24 +332,55 @@ export const usePathora = create<PathoraState>()(
       name: "pathora-ai-v1",
       version: 2,
       /**
+       * ONLY the student's own run is persisted. Everything the SERVER owns is
+       * deliberately left out, and that is a bug fix, not a tidy-up.
+       *
+       * `admin.submissions` used to be written to localStorage. The dashboard
+       * then had two sources of truth — the database, and a snapshot of it
+       * frozen in whichever browser last looked. When a refresh did not run
+       * (see the mount effect in app/admin/layout.tsx) the educator was shown
+       * that snapshot with nothing to say it was old, so a student who
+       * submitted since the last successful fetch was simply invisible. The
+       * data was never lost; it was in Mongo the whole time, just never asked
+       * for.
+       *
+       * An empty dashboard with a visible error beats a stale one that looks
+       * live, so the cache is gone rather than made smarter.
+       *
+       * This is an INCLUDE list on purpose: a field added to the store later
+       * is not persisted until somebody decides it should be, which is the
+       * safe default for anything that might belong to the server.
+       */
+      partialize: (state): PersistedSlice => ({
+        student: state.student,
+        answers: state.answers,
+        currentIndex: state.currentIndex,
+        xp: state.xp,
+        streamAnswers: state.streamAnswers,
+        streamIndex: state.streamIndex,
+        result: state.result,
+        runSeed: state.runSeed,
+      }),
+      /**
        * v1 shipped 18 fabricated students inside every browser's localStorage.
        * Bumping the version without this would make zustand DISCARD the whole
        * persisted blob, taking each student's real profile, answers and XP
        * with it. So: keep everything, drop only the fake rows.
        */
-      migrate: (persisted, version) => {
+      migrate: (persisted) => {
         const state = (persisted ?? {}) as Partial<PathoraState>;
-        if (version >= 2) return state;
-        return {
-          ...state,
-          admin: {
-            batches: state.admin?.batches ?? [],
-            // Seeded submissions are flagged `sample`. Anything a real student
-            // produced locally is kept.
-            submissions: (state.admin?.submissions ?? []).filter((s) => !s.sample),
-            seeded: false,
-          },
-        };
+        /* `admin` is dropped from any blob written before `partialize` above
+           existed, at EVERY version. Keeping it would restore the stale
+           dashboard cache for one load on upgrade — the exact snapshot this
+           change exists to stop being shown. The real rows arrive from the
+           server a moment later, and nothing of the student's own is in here.
+
+           Cast because `partialize` narrows what zustand expects back: the
+           fields below are the persisted shape, and anything missing from an
+           older blob falls back to the store's own initial state. */
+        const { admin: _serverOwned, ...kept } = state;
+        void _serverOwned;
+        return kept as PersistedSlice;
       },
     },
   ),

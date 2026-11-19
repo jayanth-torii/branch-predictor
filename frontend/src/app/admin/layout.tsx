@@ -9,6 +9,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  TriangleAlert,
   Users,
 } from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
@@ -70,29 +71,63 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
         await refreshAdminData(base);
         return;
       }
-      throw new Error(session?.error ?? "Not authenticated");
+      /* Answered, and the answer is "no". That is the LOGIN screen, not an
+         error — it is the ordinary state of a browser whose 12-hour cookie
+         expired overnight, which is most first visits of a day. The stale
+         local flag is cleared so the next mount does not flash "checking". */
+      isUnlocked.current = false;
+      sessionStorage.removeItem("pathora-admin-unlocked");
+      setMode("locked");
+      setFailure(null);
     } catch (error) {
+      /* The request itself failed — offline, CORS, backend down. That is NOT
+         the same as being signed out, so the previous best-effort behaviour
+         stands: assume the session may be good and try to load. `base` is
+         passed directly; `baseFromState()` read a render-time snapshot of the
+         store that `setApiBase` above had not yet updated, so it handed back
+         the OLD value — usually null on a first load, which skipped the fetch
+         entirely and left the dashboard on its cache. */
       setMode(unlockedCandidate(error) ? "unlocked" : "error");
       if (unlockedCandidate(error)) {
         isUnlocked.current = true;
         sessionStorage.setItem("pathora-admin-unlocked", "1");
-        await refreshAdminData(baseFromState());
+        await refreshAdminData(base);
       }
     }
   }
 
 
-  // Detect a stale client session best-effort, then verify with the server.
+  /**
+   * Ask the SERVER whether this browser is signed in, on every mount.
+   *
+   * This used to return early unless `sessionStorage` held an "unlocked"
+   * flag — and sessionStorage is wiped when the browser closes. So the first
+   * visit of a new day never checked the session and never fetched anything:
+   * the dashboard rendered whatever was in the local cache, which was a
+   * snapshot from the last time a fetch happened to run. Students who
+   * submitted in between were invisible, which read as "yesterday's data is
+   * gone" when nothing had been lost at all.
+   *
+   * GET /api/admin/session always answers 200 and reports `authenticated`,
+   * so asking unconditionally is cheap and the server decides. The
+   * sessionStorage flag is now only a hint for which screen to paint first,
+   * never a gate on loading data.
+   */
   useEffect(() => {
     if (!mounted) return;
     const hadLocalSession =
       typeof window !== "undefined" &&
       sessionStorage.getItem("pathora-admin-unlocked") === "1";
-    if (!hadLocalSession) return;
     // Deferred to a macrotask: calling setMode straight from the effect body
     // trips react-hooks/set-state-in-effect and cascades a render.
     const start = setTimeout(() => {
+      /* "checking" even without the local flag. A valid 12-hour cookie in a
+         NEW tab has no flag, and flashing the login form at someone who is
+         already signed in invites them to start typing a password they do
+         not need. A brief spinner for a genuinely locked-out visitor is the
+         cheaper of the two. */
       setMode("checking");
+      void hadLocalSession;
       verifyServerSession();
     }, 0);
     return () => clearTimeout(start);
@@ -111,8 +146,12 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
   async function refreshAdminData(base: string | null) {
     if (!base) {
       state.setAdminHydrated(false);
+      state.setAdminSyncError(
+        "No backend is configured for this site, so no student records can be loaded.",
+      );
       return;
     }
+    state.setAdminSyncError(null);
     try {
       const { fetchBatches, fetchSubmissions } = await import("@/lib/api");
       const [batchesRes, submissionsRes] = await Promise.all([
@@ -129,9 +168,12 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     } catch (error) {
       const { apiErrorMessage } = await import("@/lib/api");
       const message = apiErrorMessage(error).message;
-      if (message !== "Backend not configured") {
-        state.setAdminSyncError(message);
-      }
+      /* Always recorded, including "Backend not configured". A refresh that
+         failed silently was the other half of this bug: the dashboard kept
+         rendering whatever rows it already had, with nothing on screen to say
+         they were not current. */
+      state.setAdminSyncError(message);
+      state.setAdminHydrated(false);
     }
   }
 
@@ -175,10 +217,6 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     setFailure(null);
   }
 
-
-  function baseFromState(): string | null {
-    return state.apiBase;
-  }
 
   if (!mounted) {
     return (
@@ -246,6 +284,28 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </div>
+
+      {/* The dashboard shows the DATABASE, or it says why it cannot.
+          Previously a failed load left the previous rows on screen with no
+          indication they were stale, which is how "yesterday's students
+          disappeared" looked from this side of the screen — the records were
+          in Mongo the whole time, the page just never managed to ask. */}
+      {state.adminSyncError && (
+        <div className="mx-auto w-full max-w-6xl px-5 pt-5 sm:px-8">
+          <p
+            role="alert"
+            className="flex items-start gap-2.5 rounded-2xl border border-orange/30 bg-orange/10 px-4 py-3 text-[0.8rem] font-semibold leading-relaxed text-orange"
+          >
+            <TriangleAlert className="mt-px size-4 shrink-0" aria-hidden="true" />
+            <span>
+              Student records could not be loaded, so this page is not showing live data.{" "}
+              {state.adminSyncError} Nothing has been deleted — reload once the connection is
+              back.
+            </span>
+          </p>
+        </div>
+      )}
+
       {children}
       <SiteFooter />
     </main>
