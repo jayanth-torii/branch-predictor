@@ -7,15 +7,24 @@ const SESSION_SECONDS = 60 * 60 * 12;
 const DEV_EMAIL = "admin@localhost";
 const DEV_PASSWORD = "pathora-demo";
 
-function isProduction(): boolean {
-  return process.env.NODE_ENV === "production";
+/**
+ * Development is an EXPLICIT opt-in, and everything else counts as
+ * production.
+ *
+ * This used to be `NODE_ENV === "production"`, which meant an unset NODE_ENV
+ * — exactly what this app's Render service has — put a live deployment on the
+ * development path and handed out the fallback credentials and the public
+ * signing key below. A missing environment variable must fail CLOSED.
+ */
+function isDevelopment(): boolean {
+  return process.env.NODE_ENV === "development";
 }
 
 /** The one account that can open the educator workspace. */
 function adminEmail(): string {
   const configured = process.env.ADMIN_EMAIL?.trim();
   if (configured) return configured.toLowerCase();
-  return isProduction() ? "" : DEV_EMAIL;
+  return isDevelopment() ? DEV_EMAIL : "";
 }
 
 /**
@@ -26,14 +35,16 @@ function adminEmail(): string {
 function adminPassword(): string {
   const configured = process.env.ADMIN_PASSWORD?.trim() || process.env.ADMIN_PASSCODE?.trim();
   if (configured) return configured;
-  return isProduction() ? "" : DEV_PASSWORD;
+  return isDevelopment() ? DEV_PASSWORD : "";
 }
 
 function authSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (secret) return secret;
-  if (process.env.NODE_ENV === "production") return "";
-  return "pathora-local-development-secret";
+  // No secret and not explicitly development: return "" so every signature
+  // comparison fails, rather than signing with a string anyone can read in
+  // the repository.
+  return isDevelopment() ? "pathora-local-development-secret" : "";
 }
 
 
@@ -113,19 +124,47 @@ export function isAdminRequest(req: Request): boolean {
   return verifySessionToken(req.cookies?.[COOKIE_NAME]);
 }
 
-export function startAdminSession(res: Response): void {
-  const isProd = process.env.NODE_ENV === "production";
-  res.cookie(COOKIE_NAME, createSessionToken(), {
+/**
+ * Cookie attributes, decided by the REQUEST rather than by an environment
+ * variable.
+ *
+ * The frontend and the API are different sites (vercel.app and onrender.com),
+ * so the session cookie has to be `SameSite=None` or the browser will not
+ * attach it to a cross-site fetch at all — which is precisely what happened:
+ * login returned 200 and set the cookie, and every call after it arrived
+ * anonymous. `SameSite=None` is only accepted alongside `Secure`, and
+ * `Secure` only works over HTTPS, so the three travel together.
+ *
+ * Over plain HTTP — localhost — `None; Secure` would be rejected outright, so
+ * the pair relaxes to `Lax` and no `Secure`, which is correct for a
+ * same-origin dev setup.
+ *
+ * `x-forwarded-proto` is read because Render terminates TLS at its proxy and
+ * forwards HTTP inwards; `req.secure` only reflects that once Express is told
+ * to trust the proxy (see `app.set("trust proxy", …)` in index.ts).
+ */
+function cookieAttributes(req: Request) {
+  const overHttps =
+    req.secure ||
+    String(req.headers["x-forwarded-proto"] ?? "").split(",")[0].trim() === "https";
+  return {
     httpOnly: true,
-    sameSite: isProd ? "none" : "lax",
-    secure: isProd,
+    sameSite: overHttps ? ("none" as const) : ("lax" as const),
+    secure: overHttps,
     path: "/",
+  };
+}
+
+export function startAdminSession(req: Request, res: Response): void {
+  res.cookie(COOKIE_NAME, createSessionToken(), {
+    ...cookieAttributes(req),
     maxAge: SESSION_SECONDS * 1000,
   });
 }
 
-export function endAdminSession(res: Response): void {
-  res.clearCookie(COOKIE_NAME, { path: "/" });
+/** Cleared with the SAME attributes it was set with, or the browser keeps it. */
+export function endAdminSession(req: Request, res: Response): void {
+  res.clearCookie(COOKIE_NAME, cookieAttributes(req));
 }
 
 /** Best-effort client identity for rate limiting. */

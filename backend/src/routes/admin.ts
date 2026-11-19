@@ -121,7 +121,7 @@ adminRouter.post("/session", (req, res) => {
     }
 
     loginFailures.delete(key);
-    startAdminSession(res);
+    startAdminSession(req, res);
     return res.json({ ok: true });
   } catch {
     return res.status(500).json({ error: "Unexpected server error." });
@@ -129,9 +129,9 @@ adminRouter.post("/session", (req, res) => {
 });
 
 /** DELETE /api/admin/session — log out by clearing the cookie. */
-adminRouter.delete("/session", (_req, res) => {
+adminRouter.delete("/session", (req, res) => {
   try {
-    endAdminSession(res);
+    endAdminSession(req, res);
     return res.json({ ok: true });
   } catch {
     return res.status(500).json({ error: "Unexpected server error." });

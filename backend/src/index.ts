@@ -12,6 +12,14 @@ import { questionsRouter } from "./routes/questions.js";
 import { submissionsRouter } from "./routes/submissions.js";
 
 const app = express();
+
+/* Render (and Vercel, and every other PaaS) terminates TLS at a proxy and
+   forwards plain HTTP inwards, so Express sees an insecure request unless it
+   is told to trust the hop. Without this, `req.secure` is always false and
+   the session cookie is issued without `Secure`/`SameSite=None` — which a
+   browser then refuses to send cross-site, leaving the dashboard
+   permanently unauthenticated. `1` = trust exactly one proxy. */
+app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT ?? 4000);
 
 /**
